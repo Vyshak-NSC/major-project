@@ -14,7 +14,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 // Fetch sensor data from JSON file
 async function fetchSensorData() {
     try {
-        const response = await fetch("sensor_data.json");
+        const response = await fetch("/get_sensor_data");
         if (!response.ok) {
             throw new Error("Failed to fetch sensor data");
         }
