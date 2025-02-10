@@ -1,14 +1,12 @@
 {% extends 'base.html' %}
 
 {% block csscontent %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="{{ url_for('static', filename='/css/user/alert.css')}}" >
 {% endblock %}
 
 {% block content %}
 <h1 id="disp"></h1>
-<script>
-    document.getElementById('disp').textContent = navigator.geolocation.getCurrentPosition
-</script>
 <!-- Main Content Container -->
 <div class="container">
     <!-- Top Row: Map and Sensor Details -->
