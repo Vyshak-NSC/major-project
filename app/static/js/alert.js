@@ -14,7 +14,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 // Fetch sensor data from JSON file
 async function fetchSensorData() {
     try {
-        const response = await fetch("/get_sensor_data");
+        const response = await fetch("sensor_data.json");
         if (!response.ok) {
             throw new Error("Failed to fetch sensor data");
         }
@@ -24,6 +24,7 @@ async function fetchSensorData() {
         return [];
     }
 }
+
 
 // Fetch hazardous features near a location using Overpass API
 async function fetchHazardousFeatures(lat, lng, radius = 5) {
@@ -114,6 +115,36 @@ async function initMap(position) {
     }
     animateCircle();
 
+    // Add a "Recenter to Geolocation" button
+    const recenterButton = L.Control.extend({
+        options: {
+            position: 'topleft' // Position the button in the top-left corner
+        },
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control'); // Create a button container
+            container.style.backgroundColor = 'white';
+            container.style.border = '1px solid #ccc';
+            container.style.padding = '5px';
+            container.style.cursor = 'pointer';
+            container.style.borderRadius = '5px';
+
+            // Add an icon or text to the button
+            container.innerHTML = '<span>📍</span>'; // Use a location emoji as the icon
+            container.title = 'Recenter'; // Tooltip for the button
+
+            // Add click event to recenter the map
+            L.DomEvent.on(container, 'click', () => {
+                map.setView([userLat, userLng], 15); // Recenter to user's geolocation
+                
+            });
+
+            return container;
+        }
+    });
+
+    // Add the recenter button to the map
+    map.addControl(new recenterButton());
+
     // Fetch sensor data
     const pinnedLocations = await fetchSensorData();
 
@@ -193,15 +224,16 @@ async function initMap(position) {
             <p>Status: ${location.status}</p>
             <p>Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}</p>
             <p>Distance: ${distance.toFixed(2)} km away</p>
+            <button class="share-alert-btn">Share Alert</button> <!-- Add Share Alert Button -->
         `;
         alertBox.appendChild(alertItem);
-
+    
         // Play alert sound
         alertSound.play();
-
+    
         // Redirect map view to the danger area
-        map.setView([location.lat, location.lng], 15); // Zoom level 15 for closer view
-
+        map.setView([location.lat, location.lng], 12); // Zoom level 12 for closer view
+    
         // Open the sensor's popup
         const marker = L.marker([location.lat, location.lng]).addTo(map);
         marker.bindPopup(`
@@ -215,11 +247,53 @@ async function initMap(position) {
             Risk Level: ${location.risk}<br>
             Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}
         `).openPopup();
+    
+        // Add event listener to the "Share Alert" button
+        const shareAlertBtn = alertItem.querySelector('.share-alert-btn');
+        shareAlertBtn.addEventListener('click', () => {
+            const message = `🚨 LANDSLIDE DETECTED 
+                Location: ${location.label}
+                Status: ${location.status}
+                Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}
+                More info: https://final-corrected.vercel.app/
+            `.trim();
+            showPopup(message); // Show the pop-up modal with the alert details
+        });
     }
+   // Function to display the pop-up modal
+function showPopup(message) {
+    const popupMessage = document.getElementById('popup-message');
+    const popupModal = document.getElementById('popup-modal');
+
+ // Set the alert message in the pop-up (using innerHTML to render the link)
+    popupMessage.innerHTML = message;
+
+    // Set the alert message in the pop-up
+    popupMessage.textContent = message;
+
+    // Show the pop-up modal
+    popupModal.style.display = 'flex';
+
+    // Get references to the buttons in the pop-up modal
+    const confirmShare = document.getElementById('confirm-share');
+    const cancelShare = document.getElementById('cancel-share');
+
+    // Handle "Share on WhatsApp" button click
+    confirmShare.onclick = () => {
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank'); // Redirect to WhatsApp
+        popupModal.style.display = 'none'; // Hide the pop-up after sharing
+    };
+
+    // Handle "Cancel" button click
+    cancelShare.onclick = () => {
+        popupModal.style.display = 'none'; // Hide the pop-up
+    };
+}
 
     // Simulate alerts after 5 seconds
     setTimeout(() => {
-        const alertLocations = pinnedLocations.filter(location => location.status === 'Alert');
+        const alertLocations = pinnedLocations.filter(location => location.status === 'Alert' || location.status === 'Warning');
 
         // Calculate distances and find the nearest danger
         let nearestDanger = null;
@@ -235,14 +309,32 @@ async function initMap(position) {
 
         // Redirect to the nearest danger
         if (nearestDanger) {
-            map.setView([nearestDanger.lat, nearestDanger.lng], 15);
+            map.setView([nearestDanger.lat, nearestDanger.lng], 12);
         }
     }, 5000);
+// Function to check if the user is near or inside a hazardous area
+function isUserNearHazard(userLat, userLng, hazardousAreas, bufferRadius = 10) {
+    for (const area of hazardousAreas) {
+        const distanceToArea = calculateDistance(userLat, userLng, area.lat, area.lng);
+        const safetyBuffer = Math.max(bufferRadius, area.affectedRadius / 1000); // Buffer radius in km
+        if (distanceToArea <= safetyBuffer) {
+            return true; // User is near or inside a hazardous area
+        }
+    }
+    return false; // User is not near any hazardous areas
+}
 
- // Traffic Simulation and Evacuation Routes
 async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, userLng) {
     // Define unsafe areas
     const unsafeAreas = pinnedLocations.filter(location => location.status === 'Alert' || location.status === 'Warning');
+
+    // Check if the user is near or inside any hazardous areas
+    if (!isUserNearHazard(userLat, userLng, unsafeAreas)) {
+        console.log("User is not near any hazardous areas. Safe zone search skipped.");
+        const routeInfo = document.getElementById('route-info');
+        routeInfo.innerHTML = `You are safe! No evacuation required.`;
+        return; // Exit the function early
+    }
 
     // Draw unsafe areas on the map
     unsafeAreas.forEach(area => {
@@ -254,7 +346,7 @@ async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, user
         }).addTo(map);
     });
 
-    // Dynamically identify safe zones
+    // Dynamically identify safe zones while avoiding hazardous areas
     let nearestSafeZone = null;
     let minSafeDistance = Infinity;
     let searchRadius = 5; // Start with a 5 km search radius
@@ -268,6 +360,8 @@ async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, user
 
             // Check if this point is outside all unsafe areas with dynamic safety buffer
             let isSafe = true;
+
+            // Exclude points within unsafe areas
             for (const area of unsafeAreas) {
                 const distanceToArea = calculateDistance(safeLat, safeLng, area.lat, area.lng);
                 const safetyBuffer = Math.max(10, area.affectedRadius / 1000); // Dynamic buffer: at least 10 km or the impact radius
@@ -277,12 +371,24 @@ async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, user
                 }
             }
 
-            // Check if this point is near hazardous features
+            // Exclude points near hazardous features (e.g., water bodies, cliffs, quarries)
             if (isSafe) {
                 const hazardousFeatures = await fetchHazardousFeatures(safeLat, safeLng, 2); // 2 km radius for hazard exclusion
                 for (const hazard of hazardousFeatures) {
                     const distanceToHazard = calculateDistance(safeLat, safeLng, hazard.lat, hazard.lng);
                     if (distanceToHazard <= 1) { // Exclude points within 1 km of hazardous features
+                        isSafe = false;
+                        break;
+                    }
+                }
+            }
+
+            // Exclude points near seas or large water bodies
+            if (isSafe) {
+                const waterBodies = await fetchHazardousFeatures(safeLat, safeLng, 5); // 5 km radius for water body exclusion
+                for (const waterBody of waterBodies) {
+                    const distanceToWater = calculateDistance(safeLat, safeLng, waterBody.lat, waterBody.lng);
+                    if (distanceToWater <= 5) { // Exclude points within 5 km of water bodies
                         isSafe = false;
                         break;
                     }
@@ -311,13 +417,12 @@ async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, user
         try {
             const response = await fetch(osrmUrl);
             const data = await response.json();
-
             if (data && data.routes && data.routes.length > 0) {
                 const routeCoordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
                 const polyline = L.polyline(routeCoordinates, { color: 'green' }).addTo(map);
 
                 // Fit the map to show the entire route
-                map.fitBounds(polyline.getBounds());
+                //map.fitBounds(polyline.getBounds());
 
                 // Add a circular safe zone at the endpoint
                 L.circle([nearestSafeZone.lat, nearestSafeZone.lng], {
@@ -331,30 +436,31 @@ async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, user
                 L.marker([nearestSafeZone.lat, nearestSafeZone.lng], {
                     icon: L.divIcon({
                         className: 'safe-sign',
-                        html: '✅',
-                        iconSize: [30, 30]
                     })
                 }).addTo(map);
 
                 // Display evacuation instructions with the safe zone name
                 const routeInfo = document.getElementById('route-info');
                 routeInfo.innerHTML = `
-                    <p><strong>Evacuate to:</strong> ${safeZoneName || "Unknown Area"}</p>
-                    <p><strong>Distance:</strong> ${minSafeDistance.toFixed(2)} km</p>
-                    <p><strong>Route:</strong> Follow the green line on the map.</p>
+                    Evacuate to: ${safeZoneName || "Unknown Area"}<br>
+                    Distance: ${minSafeDistance.toFixed(0)} km<br>
+                    Route: Follow the green line on the map.<br>
+                    🚨Assist Others and Stay Safe 🚨<br>
+                    Take Essentials Only<br>
+                    Follow Instructions from Authorities<br>
                 `;
             } else {
                 const routeInfo = document.getElementById('route-info');
-                routeInfo.innerHTML = `<p>No safe route found. Please stay cautious!</p>`;
+                routeInfo.innerHTML = `No safe route found. Please stay cautious!`;
             }
         } catch (error) {
             console.error("Error fetching route data from OSRM:", error);
             const routeInfo = document.getElementById('route-info');
-            routeInfo.innerHTML = `<p>Failed to calculate evacuation route. Please try again later.</p>`;
+            routeInfo.innerHTML = `Failed to calculate evacuation route. Please try again later.`;
         }
     } else {
         const routeInfo = document.getElementById('route-info');
-        routeInfo.innerHTML = `<p>No safe zones found within ${maxSearchRadius} km. Please stay cautious!</p>`;
+        routeInfo.innerHTML = `No safe zones found within ${maxSearchRadius} km. Please stay cautious!`;
     }
 }
 
@@ -385,7 +491,14 @@ async function fetchSafeZoneName(lat, lng) {
         simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, userLng);
     }, 10000);
 
-    
+    // Feedback Form Submission
+    const feedbackForm = document.getElementById('feedback-form');
+    feedbackForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const feedback = document.getElementById('feedback').value;
+        alert('Thank you for your feedback!');
+        feedbackForm.reset();
+    });
 }
 
 // Show geolocation errors
@@ -414,3 +527,5 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Geolocation is not supported by this browser.");
     }
 });
+
+
