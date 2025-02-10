@@ -8,7 +8,7 @@ body {
     background-position: center;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    max-height: 100vh;
     position: relative; /* Important for positioning the pseudo-element */
 }
 

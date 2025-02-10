@@ -143,6 +143,70 @@
     color: #ff5722; /* Highlight text on hover */
 }
 
+.share-btn {
+    background-color: #25D366;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.share-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Pop-Up Modal Styles */
+.popup-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.popup-content h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #333;
+}
+
+#popup-message {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.cancel-btn {
+    background-color: #BB001B;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.cancel-btn:hover {
+    transform: scale(1.1);
+}
 /* Evacuation Routes Section */
 #evacuation-routes {
     width: 50%;

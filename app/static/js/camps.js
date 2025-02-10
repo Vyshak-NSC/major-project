@@ -79,7 +79,7 @@ function updateMap() {
 
     // Update Directions Button
     document.getElementById("directions-btn").onclick = () => {
-        window.open(`https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${center[0]},${center[1]}`, "_blank");
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${center[0]},${center[1]}`, "_blank");
     };
 }
 
@@ -199,3 +199,59 @@ window.addEventListener('click', (event) => {
 // Initialize First Camp on Page Load
 initMap();
 updateCampDetails();
+
+// Function to reset a dropdown to its default state
+function resetDropdown(dropdown) {
+    dropdown.innerHTML = '<option value="" disabled selected>Select a Camp</option>' +
+        '<option value="Camp A">Camp A</option>' +
+        '<option value="Camp B">Camp B</option>' +
+        '<option value="Camp C">Camp C</option>';
+}
+
+// Function to filter and display only the remaining camps
+function filterAndDisplayOptions(dropdown, excludedValues) {
+    // Reset the dropdown to its default state
+    resetDropdown(dropdown);
+
+    // Remove options that are excluded
+    Array.from(dropdown.options).forEach(option => {
+        if (excludedValues.includes(option.value)) {
+            option.remove(); // Remove the excluded option
+        }
+    });
+}
+
+// Event Listener for priority1
+document.getElementById("priority1").addEventListener("change", function () {
+    const selectedValue1 = this.value; // Get the selected value from priority1
+    const priority2 = document.getElementById("priority2");
+    const priority3 = document.getElementById("priority3");
+
+    // Reset priority2 and priority3 dropdowns
+    resetDropdown(priority2);
+    resetDropdown(priority3);
+
+    // Filter out the selected value from priority1
+    if (selectedValue1) {
+        filterAndDisplayOptions(priority2, [selectedValue1]);
+        filterAndDisplayOptions(priority3, [selectedValue1]);
+    }
+});
+
+// Event Listener for priority2
+document.getElementById("priority2").addEventListener("change", function () {
+    const selectedValue1 = document.getElementById("priority1").value; // Get the selected value from priority1
+    const selectedValue2 = this.value; // Get the selected value from priority2
+    const priority3 = document.getElementById("priority3");
+
+    // Reset priority3 dropdown
+    resetDropdown(priority3);
+
+    // Filter out the selected values from priority1 and priority2
+    if (selectedValue1 || selectedValue2) {
+        const excludedValues = [];
+        if (selectedValue1) excludedValues.push(selectedValue1);
+        if (selectedValue2) excludedValues.push(selectedValue2);
+        filterAndDisplayOptions(priority3, excludedValues);
+    }
+});

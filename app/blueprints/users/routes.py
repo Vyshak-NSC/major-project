@@ -24,3 +24,11 @@ def get_sensor_data():
         data = json.load(file)
     return jsonify(data)
 
+@user_bp.route('/donations')
+def donations():
+    return render_template('user/donations.html')
+
+@user_bp.route('/guide')
+def guide():
+    return render_template('user/guide.html')
+

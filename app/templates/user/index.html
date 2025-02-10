@@ -22,15 +22,15 @@
                 recovery strategies.</p>
             <div class="welcome-content">
                 <div class="welcome-content">
-                    <a href="alert.html" class="welcome-item">
+                    <a href="{{ url_for('user.alerts') }}" class="welcome-item">
                         <i class="fas fa-bell"></i>
                         <p>Get real-time alerts for landslide-prone areas.</p>
                     </a>
-                    <a href="guide.html" class="welcome-item">
+                    <a href="{{ url_for('user.guide') }}" class="welcome-item">
                         <i class="fas fa-book"></i>
                         <p>Access educational guides and resources.</p>
                     </a>
-                    <a href="donation.html" class="welcome-item">
+                    <a href="{{ url_for('user.donations') }}" class="welcome-item">
                         <i class="fas fa-hand-holding-heart"></i>
                         <p>Support disaster relief efforts through donations.</p>
                     </a>
@@ -80,7 +80,7 @@
 </section>
 <!-- Donations Pie Chart -->
 <div class="chart-section">
-<a href="donation.html">
+<a href="{{ url_for('user.donations')}}">
     <h2>DONATIONS</h2>
     <div class="pie-chart">
         <canvas id="myChart"></canvas>
@@ -117,9 +117,8 @@
     <iframe src="chatbot.html" id="chatbot-frame"></iframe>
 </div>
 
-
-<script src="index.js"></script>
 {% endblock %}
+
 {% block jscontent %}
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 {% endblock %}
