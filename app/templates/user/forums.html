@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block csscontent %}
+<link rel="stylesheet" href="{{ url_for('static', filename='/css/user/forums.css')}}" >
+{% endblock %}
+
+{% block content %}
+
+    <!-- Forums Section -->
+    <main class="forum-container">
+        <!-- Top Row: FAQ and Ask a Question -->
+        <section class="top-row">
+            <!-- FAQ Section -->
+            <div class="box faq-section">
+                <h2>Frequently Asked Questions (FAQs)</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-question">What should I do during a landslide?</button>
+                        <p class="faq-answer">Stay calm and move to higher ground immediately. Avoid areas near slopes or cliffs.</p>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question">How can I report a landslide?</button>
+                        <p class="faq-answer">Contact local authorities immediately.</p>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question">Where can I find safety guides?</button>
+                        <p class="faq-answer">Visit the "Guide" section of our website for detailed safety instructions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ask a Question Section -->
+            <div class="box ask-question">
+                <h2>Ask a Question</h2>
+                <form id="question-form">
+                    <label for="question-title">Title:</label>
+                    <input type="text" id="question-title" placeholder="Enter your question title" required>
+                    <label for="question-body">Details:</label>
+                    <textarea id="question-body" placeholder="Describe your question in detail" required></textarea>
+                    <button type="submit">Submit Question</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Bottom Row: Feedback Form and Recent Threads -->
+        <section class="bottom-row">
+            <!-- Feedback Form Section -->
+            <div class="box feedback-section">
+                <h2>Feedback Form</h2>
+                <form id="feedback-form">
+                    <label for="feedback-name">Name:</label>
+                    <input type="text" id="feedback-name" placeholder="Your name" required>
+                    <label for="feedback-email">Email:</label>
+                    <input type="email" id="feedback-email" placeholder="Your email" required>
+                    <label for="feedback-message">Message:</label>
+                    <textarea id="feedback-message" placeholder="Your feedback or suggestions" required></textarea>
+                    <button type="submit">Submit Feedback</button>
+                </form>
+            </div>
+
+            <!-- Recent Threads Section -->
+<!-- Recent Threads Section -->
+<div class="box threads">
+    <h2>Recent Threads</h2>
+    <div class="threads-container">
+        <ul class="thread-list" id="thread-list">
+            <!-- Example Thread -->
+            <li class="thread-item">
+                <div class="thread-header">
+                    <span class="thread-title">How to Prepare for Landslides?</span>
+                    <span class="thread-author">by JohnDoe</span>
+                </div>
+                <div class="thread-body">
+                    <p>I live in an area prone to landslides. What are some steps I can take to prepare my home and family for such an event? Any advice would be appreciated!</p>
+                </div>
+                <div class="replies">
+                    <div class="reply">
+                        <p><strong>JaneDoe:</strong> Make sure you have an emergency kit ready with food, water, and first-aid supplies. Also, familiarize yourself with evacuation routes.</p>
+                    </div>
+                    <div class="reply">
+                        <p><strong>Admin:</strong> Check out our "Guide" section for detailed safety instructions. It includes tips on securing your home and preparing an emergency plan.</p>
+                    </div>
+                    <div class="reply">
+                        <p><strong>User123:</strong> I recommend installing early warning systems if possible. They can alert you before a landslide occurs.</p>
+                    </div>
+                </div>
+                <div class="thread-stats">
+                    <span class="replies">Replies: 3</span>
+                    <span class="views">Views: 150</span>
+                </div>
+                <!-- Reply Button -->
+                <button class="reply-button">Reply</button>
+                <!-- Reply Form (Initially Hidden) -->
+                <form class="reply-form" style="display: none;">
+                    <label for="reply-text">Your Reply:</label>
+                    <textarea id="reply-text" placeholder="Type your reply here..." required></textarea>
+                    <button type="submit">Submit Reply</button>
+                </form>
+            </li>
+            <!-- Add more threads as needed -->
+        </ul>
+    </div>
+</div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="forum-footer">
+        <p>&copy; 2025 Landslide Detection. All rights reserved.</p>
+    </footer>
+    {% endblock %}
+
+    {% block jscontent %}
+        <script src="{{ url_for('static', filename='/js/forums.js')}}"></script>
+    {% endblock %}

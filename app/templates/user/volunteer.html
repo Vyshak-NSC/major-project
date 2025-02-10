@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block csscontent %}
+<link rel="stylesheet" href="{{ url_for('static', filename='/css/user/volunteer.css')}}" >
+{% endblock %}
+
+{% block content %}
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Top Row -->
+        <div class="top-row">
+             <!-- Become a Volunteer Section -->
+             <div class="volunteer-details glass">
+                <h2>Become a Volunteer</h2>
+                <p>
+                    Join us in making a difference during disasters. 
+                    <span class="typewriter-text"></span> <!-- Typewriter Effect Target -->
+             
+                <form id="volunteer-form">
+                    <div class="form-field">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="phone">Phone:</label>
+                        <input type="tel" id="phone" placeholder="Enter your phone number" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" placeholder="Enter your location" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="role-id">Role ID:</label>
+                        <input type="text" id="role-id" placeholder="Enter Role ID (e.g., R123)" required>
+                    </div>
+                    <button type="submit" class="btn">Submit Application</button>
+                </form>
+            </div>
+
+
+            <!-- Available Role Section -->
+            <div class="available-role glass">
+                <h2>Available Roles</h2>
+                <div class="role-table-container">
+                    <table id="role-table">
+                        <thead>
+                            <tr>
+                                <th>Role ID</th>
+                                <th>Role</th>
+                                <th>Location</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>R123</td>
+                                <td>Food Distribution Volunteer</td>
+                                <td>Wayanad, Kerala</td>
+                                <td>Assist in distributing food supplies to affected families.</td>
+                            </tr>
+                            <tr>
+                                <td>R124</td>
+                                <td>Medical Aid Volunteer</td>
+                                <td>Kozhikode, Kerala</td>
+                                <td>Provide medical assistance to injured individuals.</td>
+                            </tr>
+                            <tr>
+                                <td>R125</td>
+                                <td>Rescue Operation Volunteer</td>
+                                <td>Idukki, Kerala</td>
+                                <td>Participate in rescue operations during floods.</td>
+                            </tr>
+                            <tr>
+                                <td>R126</td>
+                                <td>Shelter Management Volunteer</td>
+                                <td>Thrissur, Kerala</td>
+                                <td>Help manage relief camps and coordinate resources.</td>
+                            </tr>
+                            <tr>
+                                <td>R127</td>
+                                <td>Logistics Coordinator</td>
+                                <td>Ernakulam, Kerala</td>
+                                <td>Organize transportation and delivery of supplies.</td>
+                            </tr>
+                            <tr>
+                                <td>R128</td>
+                                <td>Counseling Volunteer</td>
+                                <td>Palakkad, Kerala</td>
+                                <td>Provide emotional support to affected individuals.</td>
+                            </tr>
+                            <tr>
+                                <td>R129</td>
+                                <td>Water Sanitation Volunteer</td>
+                                <td>Kollam, Kerala</td>
+                                <td>Ensure clean water supply and sanitation facilities.</td>
+                            </tr>
+                            <tr>
+                                <td>R130</td>
+                                <td>Child Care Volunteer</td>
+                                <td>Alappuzha, Kerala</td>
+                                <td>Take care of children in relief camps.</td>
+                            </tr>
+                            <tr>
+                                <td>R131</td>
+                                <td>Elderly Care Volunteer</td>
+                                <td>Kannur, Kerala</td>
+                                <td>Assist elderly individuals in relief camps.</td>
+                            </tr>
+                            <tr>
+                                <td>R132</td>
+                                <td>Animal Rescue Volunteer</td>
+                                <td>Kasaragod, Kerala</td>
+                                <td>Rescue and care for animals affected by disasters.</td>
+                            </tr>
+                            <tr>
+                                <td>R133</td>
+                                <td>Community Liaison Volunteer</td>
+                                <td>Malappuram, Kerala</td>
+                                <td>Act as a bridge between communities and relief teams.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="bottom-row">
+            <!-- Volunteer History Section -->
+            <div class="volunteer-history glass">
+                <h2>Your Volunteer History</h2>
+                <ul id="history-list">
+                    <li>You volunteered at Camp A on 12/01/2023.</li>
+                    <li>You helped distribute food supplies on 10/01/2023.</li>
+                    <li>You participated in a rescue operation on 08/01/2023.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block jscontent %}
+        <script src="{{ url_for('static', filename='/js/volunteer.js')}}"></script>
+    {% endblock %}

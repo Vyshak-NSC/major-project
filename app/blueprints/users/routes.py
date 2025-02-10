@@ -32,3 +32,10 @@ def donations():
 def guide():
     return render_template('user/guide.html')
 
+@user_bp.route('/volunteer')
+def volunteer():
+    return render_template('user/volunteer.html')
+
+@user_bp.route('/forums')
+def forums():
+    return render_template('user/forums.html')

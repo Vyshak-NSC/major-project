@@ -34,18 +34,18 @@
                     </li>
 
                     <!-- Donation -->
-                    <li {% if request.endpoint == 'user.donation' %} class="active" {% endif %}>
+                    <li {% if request.endpoint == 'user.donations' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.donations') }}">Donation</a>
                     </li>
 
                     <!-- Volunteer -->
                     <li {% if request.endpoint == 'user.volunteer' %} class="active" {% endif %}>
-                        <a href="">Volunteer</a>
+                        <a href="{{ url_for('user.volunteer') }}">Volunteer</a>
                     </li>
 
                     <!-- Forums -->
                     <li {% if request.endpoint == 'user.forums' %} class="active" {% endif %}>
-                        <a href="">Forums</a>
+                        <a href="{{ url_for('user.forums') }}">Forums</a>
                     </li>
 
                     <!-- Guide -->
