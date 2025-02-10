@@ -1,6 +1,6 @@
 from flask import jsonify, render_template
 from . import user_bp
-import json, os
+import json, sys, os
 
 @user_bp.route('/')
 def index():
@@ -20,7 +20,7 @@ def alerts():
 
 @user_bp.route('/get_sensor_data')
 def get_sensor_data():
-    with open(os.path.join(os.path.dirname(__file__), 'static\\sensor_data.json')) as file:
+    with open('app/static/sensor_data.json') as file:
         data = json.load(file)
     return jsonify(data)
 
