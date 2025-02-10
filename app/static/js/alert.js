@@ -11,6 +11,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
     return R * c; // Distance in km
 }
 
+let lastDatahash = null;
 // Fetch sensor data from JSON file
 async function fetchSensorData() {
     try {
@@ -19,12 +20,19 @@ async function fetchSensorData() {
             throw new Error("Failed to fetch sensor data");
         }
         return await response.json();
+        // const data = await response.json();
+        // const dataHash = JSON.stringify(data);
+
+        // if(dataHash !== lastDatahash){
+        //     lastDatahash = dataHash;
+        //     location.reload();
+        // }
     } catch (error) {
         console.error("Error fetching sensor data:", error);
         return [];
     }
 }
-
+// setInterval(fetchSensorData, 100000)
 
 // Fetch hazardous features near a location using Overpass API
 async function fetchHazardousFeatures(lat, lng, radius = 5) {
