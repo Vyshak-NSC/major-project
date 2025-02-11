@@ -19,11 +19,14 @@ class User(db.Model, UserMixin):
 class Camp(db.Model):
     cid = db.Column(db.Integer, primary_key=True)
     camp_name = db.Column(db.String(100), unique=True, nullable=False)
-    food_stock_quota = db.Column(db.Integer, default=0)
-    water_stock_litres = db.Column(db.Integer, default=0)
+    location = db.Column(db.String(100), nullable=False)
+    coordinates_lat = db.Column(db.Float, nullable=False)  # Latitude
+    coordinates_lng = db.Column(db.Float, nullable=False)  # Longitude
+    status = db.Column(db.String(20), nullable=False, default="Operational")
     capacity = db.Column(db.Integer, nullable=False)
     num_people_present = db.Column(db.Integer, default=0)
+    food_stock_quota = db.Column(db.Integer, default=0)
+    water_stock_litres = db.Column(db.Integer, default=0)
+    contact_number = db.Column(db.String(20))
+    announcements = db.Column(db.Text, default="")
     people_list = db.Column(db.PickleType, default=[])
-
-    def __repr__(self):
-        return f"<Camp {self.camp_name}>"

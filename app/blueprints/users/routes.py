@@ -1,6 +1,7 @@
-from flask import jsonify, render_template
+from flask import jsonify, render_template, request
 from . import user_bp
-import json, sys, os
+import json
+from app.db_manager import CampManager, CampNotFound
 
 @user_bp.route('/')
 def index():
@@ -39,3 +40,29 @@ def volunteer():
 @user_bp.route('/forums')
 def forums():
     return render_template('user/forums.html')
+
+@user_bp.route('/get_camp_data/<int:cid>')
+def get_camp_data(cid):
+    """
+    Fetch data for a specific camp by its ID using CampManager.
+    """
+    camp_data = CampManager.get_camp_data(cid)
+    if camp_data:
+        return jsonify(camp_data)
+    return jsonify({"error": "Camp not found"}), 404
+
+@user_bp.route('/list_all_camps')
+def list_all_camps():
+    """
+    Fetch a list of all camps using CampManager.
+    """
+    camps = CampManager.list_all_camps()
+    return jsonify(camps)
+
+##errors
+@user_bp.errorhandler(CampNotFound)
+def handle_camp_not_found(error):
+    """
+    Global error handler for CampNotFound exceptions.
+    """
+    return jsonify({"error": str(error)}), 404

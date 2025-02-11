@@ -1,12 +1,9 @@
 {% extends 'base.html' %}
-
 {% block csscontent %}
-<link rel="stylesheet" href="{{ url_for('static', filename='/css/user/camps.css')}}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user/camps.css') }}">
 {% endblock %}
-
 {% block content %}
-   <!-- Camps Page Content -->
-   <div class="camps-page">
+<div class="camps-page">
     <!-- Left Column: Camp Details and Charts -->
     <div class="left-column">
         <!-- Camp Details Section -->
@@ -51,8 +48,7 @@
     <div class="announcements-section">
         <h2>Announcements</h2>
         <ul id="announcements-list">
-            <li>New supplies arriving tomorrow.</li>
-            <li>Medical camp set up on 25th October.</li>
+            <!-- Announcements will be dynamically populated here -->
         </ul>
     </div>
     <!-- Request Box -->
@@ -81,37 +77,41 @@
             <label for="otp">OTP:</label>
             <input type="text" id="otp" name="otp" required>
             <label for="number_slot">Number Of Slot:</label>
-                <input type="number" class="number_slot" name="number[]" min="1" max="6" required>
-                <label for="priority1">Priority 1:</label>
-                <select id="priority1" name="priority1" required>
-                    <option value="" disabled selected>Select a Camp</option>
-                    <option value="Camp A">Camp A</option>
-                    <option value="Camp B">Camp B</option>
-                    <option value="Camp C">Camp C</option>
-                </select>
-                
-                <label for="priority2">Priority 2:</label>
-                <select id="priority2" name="priority2">
-                    <option value="" disabled selected>Select a Camp</option>
-                    <option value="Camp A">Camp A</option>
-                    <option value="Camp B">Camp B</option>
-                    <option value="Camp C">Camp C</option>
-                </select>
-                
-                <label for="priority3">Priority 3:</label>
-                <select id="priority3" name="priority3">
-                    <option value="" disabled selected>Select a Camp</option>
-                    <option value="Camp A">Camp A</option>
-                    <option value="Camp B">Camp B</option>
-                    <option value="Camp C">Camp C</option>
-                </select>
+            <input type="number" class="number_slot" name="number[]" min="1" max="6" required>
+            <label for="priority1">Priority 1:</label>
+            <select id="priority1" name="priority1" required>
+                <option value="" disabled selected>Select a Camp</option>
+                <option value="Camp A">Camp A</option>
+                <option value="Camp B">Camp B</option>
+                <option value="Camp C">Camp C</option>
+            </select>
+            <label for="priority2">Priority 2:</label>
+            <select id="priority2" name="priority2">
+                <option value="" disabled selected>Select a Camp</option>
+                <option value="Camp A">Camp A</option>
+                <option value="Camp B">Camp B</option>
+                <option value="Camp C">Camp C</option>
+            </select>
+            <label for="priority3">Priority 3:</label>
+            <select id="priority3" name="priority3">
+                <option value="" disabled selected>Select a Camp</option>
+                <option value="Camp A">Camp A</option>
+                <option value="Camp B">Camp B</option>
+                <option value="Camp C">Camp C</option>
+            </select>
             <button type="submit">Submit Request</button>
         </form>
     </div>
 </div>
 {% endblock %}
-
 {% block jscontent %}
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="{{ url_for('static', filename='js/camps.js')}}" defer></script>
+<!-- Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Your custom camps.js -->
+<script src="{{ url_for('static', filename='js/camps.js') }}" defer></script>
 {% endblock %}
