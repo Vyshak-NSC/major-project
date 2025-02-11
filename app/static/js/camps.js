@@ -1,40 +1,92 @@
+let camps = [];  // Ensure `camps` is initialized as an empty array
 let currentCampIndex = 0;
 let map;
 
-// Initialize Map
-function initMap(lat, lng, location) {
-    const center = [lat, lng];
+// Fetch Camps from Backend
+async function fetchCamps() {
+    try {
+        const response = await fetch('/list_all_camps');
+        if (!response.ok) {
+            throw new Error("Failed to fetch camp data");
+        }
+
+        camps = await response.json();
+        console.log("Fetched camps:", camps);
+
+        if (!Array.isArray(camps) || camps.length === 0) {
+            alert("No camps available.");
+            return;
+        }
+
+        currentCampIndex = 0;  // Reset index
+        initMap(camps[currentCampIndex]);  // Initialize map with first camp
+        updateCampDetails(camps);
+    } catch (error) {
+        console.error("Error fetching camps:", error);
+        alert("Error fetching camps.");
+    }
+}
+
+// Initialize Map (After Fetching Data)
+function initMap(camp) {
+    if (!camp || !camp.coordinates) {
+        console.error("Invalid camp data for map initialization.");
+        return;
+    }
+
+    const center = [camp.coordinates.lat, camp.coordinates.lng];
+
     map = L.map("map").setView(center, 12);
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
+
     L.marker(center).addTo(map)
-        .bindPopup(location)
+        .bindPopup(camp.location)
         .openPopup();
 }
 
-// Update Map and Directions Button
-function updateMap(lat, lng, location) {
-    const center = [lat, lng];
+// Update Map
+function updateMap(camps) {
+    if (!camps || camps.length === 0) {
+        console.error("No camp data available for map update.");
+        return;
+    }
+
+    const currentCamp = camps[currentCampIndex];
+    if (!currentCamp || !currentCamp.coordinates) {
+        console.error("Invalid camp data for map update.");
+        return;
+    }
+
+    const center = [currentCamp.coordinates.lat, currentCamp.coordinates.lng];
+
     map.setView(center, 12);
+
+    // Remove existing markers
     map.eachLayer(layer => {
         if (layer instanceof L.Marker) {
             map.removeLayer(layer);
         }
     });
+
     L.marker(center).addTo(map)
-        .bindPopup(location)
+        .bindPopup(currentCamp.location)
         .openPopup();
+
     document.getElementById("directions-btn").onclick = () => {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${center[0]},${center[1]}`, "_blank");
+        window.open(`https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${center[0]},${center[1]}`, "_blank");
     };
 }
 
 // Initialize Chart
 let resourcesChart;
+
 function initializeChart(food, water) {
     const ctx = document.getElementById("resources-chart").getContext("2d");
     if (resourcesChart) resourcesChart.destroy();
+
     resourcesChart = new Chart(ctx, {
         type: "bar",
         data: {
@@ -51,12 +103,6 @@ function initializeChart(food, water) {
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: "top"
-                }
-            },
             scales: {
                 y: {
                     beginAtZero: true
@@ -66,120 +112,56 @@ function initializeChart(food, water) {
     });
 }
 
-//clear old camp data displayed
-function clearCampDetails() {
-    // Clear the chart
-    if (resourcesChart) resourcesChart.destroy();
-
-    // Clear the map
-    if (map) {
-        map.eachLayer(layer => {
-            if (layer instanceof L.Marker) {
-                map.removeLayer(layer);
-            }
-        });
-        map.setView([0, 0], 2); // Reset map to a default view
+// Update Camp Details
+function updateCampDetails(camps) {
+    if (!camps || camps.length === 0) {
+        console.error("No camps available for display.");
+        return;
     }
-}
 
-function showNoCampMessage() {
-    const campDetailsSection = document.querySelector(".camp-details");
-    campDetailsSection.innerHTML = `
-        <h1>No camp set up</h1>
-    `;
-}
+    const currentCamp = camps[currentCampIndex];
 
-// Fetch All Camps and Display the First One
-async function fetchAllCamps() {
-    try {
-        const response = await fetch("/list_all_camps");
-        if (!response.ok) {
-            throw new Error("Failed to fetch camps");
-        }
-        const camps = await response.json();
-
-        // Check if there are no camps
-        if (camps.length === 0) {
-            showNoCampMessage(); // Show "No camp set up" message
-            clearCampDetails(); // Clear all displayed data
-            return;
-        }
-
-        // Store camps globally
-        window.camps = camps;
-
-        // Initialize the first camp
-        displayCamp(camps[currentCampIndex]);
-        initMap(camps[currentCampIndex].coordinates.lat, camps[currentCampIndex].coordinates.lng, camps[currentCampIndex].location);
-    } catch (error) {
-        console.error(error.message || "An error occurred while fetching camps.");
-        showNoCampMessage(); // Show "No camp set up" message
-        clearCampDetails(); // Clear all displayed data in case of an error
+    if (!currentCamp) {
+        console.error("Invalid camp data.");
+        return;
     }
-}
 
-// Display Camp Details on Page
-function displayCamp(camp) {
-    document.getElementById("camp-id").textContent = camp.cid;
-    document.getElementById("camp-location").textContent = camp.location;
-    document.getElementById("camp-status").textContent = camp.status;
-    document.getElementById("camp-capacity").textContent = `${camp.num_people_present} / ${camp.capacity} people`;
-    document.getElementById("camp-food").textContent = `${camp.food_stock_quota} meals`;
-    document.getElementById("camp-water").textContent = `${camp.water_stock_litres} liters`;
-    document.getElementById("camp-contact").textContent = camp.contact_number;
+    document.getElementById("camp-id").textContent = currentCamp.cid || "N/A";
+    document.getElementById("camp-location").textContent = currentCamp.location || "N/A";
+    document.getElementById("camp-status").textContent = currentCamp.status || "N/A";
+    document.getElementById("camp-capacity").textContent = `${currentCamp.num_people_present || 0} / ${currentCamp.capacity || 0} people`;
+    document.getElementById("camp-food").textContent = `${currentCamp.food_stock_quota || 0} meals`;
+    document.getElementById("camp-water").textContent = `${currentCamp.water_stock_litres || 0} liters`;
+    document.getElementById("camp-contact").textContent = currentCamp.contact_number || "N/A";
 
-    // Update Announcements List
-    const announcementsListElement = document.getElementById("announcements-list");
-    announcementsListElement.innerHTML = "";
-    camp.announcements.forEach(announcement => {
-        const li = document.createElement("li");
-        li.textContent = announcement;
-        announcementsListElement.appendChild(li);
-    });
-
-    // Update Chart
-    initializeChart(camp.food_stock_quota, camp.water_stock_litres);
-
-    // Update Map
-    updateMap(camp.coordinates.lat, camp.coordinates.lng, camp.location);
+    initializeChart(currentCamp.food_stock_quota, currentCamp.water_stock_litres);
+    updateMap(camps);
 }
 
 // Next Camp Button
 document.getElementById("next-camp-btn").addEventListener("click", () => {
-    currentCampIndex = (currentCampIndex + 1) % window.camps.length;
-    displayCamp(window.camps[currentCampIndex]);
-});
-
-// Search Functionality
-document.getElementById("search-btn").addEventListener("click", () => {
-    const searchInput = document.getElementById("search-input").value.trim().toLowerCase();
-    const currentCamp = window.camps[currentCampIndex];
-    const result = currentCamp.people_list.find(person => person.toLowerCase() === searchInput);
-    const searchResult = document.getElementById("search-result");
-    if (result) {
-        searchResult.textContent = `${result} is currently registered at Camp ${currentCamp.cid} (${currentCamp.location}).`;
-    } else {
-        searchResult.textContent = "No matching records found.";
+    if (!camps || camps.length === 0) {
+        console.error("No camps available.");
+        return;
     }
+
+    currentCampIndex = (currentCampIndex + 1) % camps.length;
+    // console.log("Switching to camp:", camps[currentCampIndex]);
+    updateCampDetails(camps);
 });
 
-// Show/hide request form popup
-const requestSlotBtn = document.getElementById('request-slot-btn');
-const requestFormPopup = document.getElementById('request-form-popup');
-const closeBtn = document.querySelector('.close-btn');
-requestSlotBtn.addEventListener('click', () => {
-    requestFormPopup.style.display = 'flex';
-});
-closeBtn.addEventListener('click', () => {
-    requestFormPopup.style.display = 'none';
-});
-
-// Close popup when clicking outside the content
-window.addEventListener('click', (event) => {
-    if (event.target === requestFormPopup) {
-        requestFormPopup.style.display = 'none';
+// Previous camp button
+document.getElementById("prev-camp-btn").addEventListener("click", () => {
+    if (!camps || camps.length === 0) {
+        console.error("No camps available.");
+        return;
     }
+
+    // Move to the previous camp (loops to the last camp if at the first)
+    currentCampIndex = (currentCampIndex - 1 + camps.length) % camps.length;
+    console.log("Switching to previous camp:", camps[currentCampIndex]);
+    updateCampDetails(camps);
 });
 
-// Initialize Camps on Page Load
-fetchAllCamps();
+// Fetch Camps on Page Load
+fetchCamps();

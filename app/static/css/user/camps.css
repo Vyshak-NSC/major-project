@@ -55,7 +55,7 @@
 .camp-info p:hover {
     opacity: 0.8; /* Fade effect on hover */
 }
-#next-camp-btn, #request-btn {
+#next-camp-btn, #prev-camp-btn, #request-btn {
     margin-top: 1.2vh;
     padding: 0.6vh 2vw; /* Reduced padding */
     background: #007bff;
@@ -66,7 +66,7 @@
     font-size: 1.2rem; /* Reduced font size */
     transition: all 0.3s ease;
 }
-#next-camp-btn:hover, #request-btn:hover {
+#next-camp-btn:hover, #prev-camp-btn:hover, #request-btn:hover {
     background: #005bb5; /* Darker blue on hover */
     transform: scale(1.05); /* Slight zoom effect */
 }
