@@ -76,7 +76,7 @@ function updateMap(camps) {
         .openPopup();
 
     document.getElementById("directions-btn").onclick = () => {
-        window.open(`https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${center[0]},${center[1]}`, "_blank");
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${center[0]},${center[1]}`, "_blank");
     };
 }
 

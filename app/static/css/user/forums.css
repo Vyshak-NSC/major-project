@@ -1,4 +1,3 @@
-
 /* Forum Container */
 .forum-container {
     width: 90%;
@@ -52,6 +51,7 @@
 
 /* FAQ Styles */
 .faq-item {
+    color: #fff;
     margin-bottom: 0.8vh; /* Slightly reduced margin */
     transition: transform 0.3s ease;
 }
@@ -87,6 +87,7 @@
 /* Ask a Question Styles */
 .ask-question form, .feedback-section form {
     display: flex;
+    color: #fff;
     flex-direction: column;
     gap: 0.8vh; /* Slightly reduced gap */
 }
@@ -130,6 +131,7 @@
     overflow-y: auto; /* Enable vertical scrolling */
     border: 1px solid rgba(255, 255, 255, 0.2); /* Optional: Add border for clarity */
     border-radius: 15px;
+    color: #fff;
     padding: 1vh 1.5vw; /* Padding for the scrollable container */
     margin-bottom: 2vh; /* Space below the container */
 }

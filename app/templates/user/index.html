@@ -61,18 +61,18 @@
             </div>
             <h2> Relief Camps</h2>
             <div class="camp-details">
-                <div class="camp-info">
-                    <p><strong>Capacity:</strong> <span id="camp-capacity">200</span>/500</p>
-                    <p><strong>Available People:</strong> <span id="available-people">200</span></p>
-                    <p><strong>Food Supply:</strong> <span id="food-supply">80%</span></p>
-                    <p><strong>Water Supply:</strong> <span id="water-supply">70%</span></p>
-                    <p><strong>Location:</strong> <span id="camp-location">Region A</span></p>
+                <div id="index-camp-info" class="camp-info">
+                    <p><strong>Capacity:</strong> <span id="camp-capacity"></span></p>
+                    <p><strong>Available People:</strong> <span id="available-people"></span></p>
+                    <p><strong>Food Supply:</strong> <span id="food-supply"></span></p>
+                    <p><strong>Water Supply:</strong> <span id="water-supply"></span></p>
+                    <p><strong>Location:</strong> <span id="camp-location"></span></p>
                 </div>
                 <div class="camp-graph">
                     <canvas id="campChart"></canvas>
                 </div>
             </div>
-            <button class="next-camp-btn">Next Camp <i class="fas fa-arrow-right"></i></button>
+            <button id="next-camp-btn-home" class="next-camp-btn">Next Camp <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -114,7 +114,7 @@
         <span>Chatbot</span>
         <button id="chatbot-close">✖</button>
     </div>
-    <iframe src="chatbot.html" id="chatbot-frame"></iframe>
+    <!-- <iframe src="chatbot.html" id="chatbot-frame"></iframe> -->
 </div>
 
 {% endblock %}

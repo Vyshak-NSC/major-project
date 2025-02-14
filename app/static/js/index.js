@@ -1,5 +1,10 @@
-// Chart.js Configuration for Donation Pie Chart
+let camp_index = 0; // Start with index 0 for easier array access
+let all_camps = []; // Store all camps data fetched from the server
+
 document.addEventListener("DOMContentLoaded", function () {
+    // Fetch all camps data on page load
+    fetchAllCampsData();
+
     // Donation Pie Chart
     const donationCtx = document.getElementById("myChart").getContext("2d");
     const donationChart = new Chart(donationCtx, {
@@ -34,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
             labels: ["Capacity", "Food Supply", "Water Supply"],
             datasets: [{
                 label: "Relief Camp Data",
-                data: [200, 80, 70],
+                data: [120,120,120],
                 backgroundColor: ["#007bff", "#28a745", "#ffc107"],
                 hoverBackgroundColor: ["#005bb5", "#218838", "#e0a800"],
                 borderWidth: 0,
@@ -52,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     enabled: true,
                     callbacks: {
                         label: function (context) {
-                            const labels = ["people", "kg", "liters"];
+                            const labels = ["people", "meals", "liters"];
                             return `${context.label}: ${context.raw} ${labels[context.dataIndex]}`;
                         }
                     }
@@ -67,23 +72,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Next Camp Button Functionality
     document.querySelector(".next-camp-btn").addEventListener("click", function () {
-        console.log("Next camp button clicked"); // Debugging log
+        camp_index = (camp_index + 1) % all_camps.length; // Cycle through camps
+        console.log("Next camp button clicked:", camp_index); // Debugging log
 
-        // Update camp details
-        document.getElementById("camp-capacity").textContent = "300";
-        document.getElementById("available-people").textContent = "250";
-        document.getElementById("food-supply").textContent = "90%";
-        document.getElementById("water-supply").textContent = "85%";
-        document.getElementById("camp-location").textContent = "Region B";
-
-        // Update chart data
-        if (campChart) {
-            campChart.data.datasets[0].data = [300, 90, 85];
-            campChart.update();
-            console.log("Camp chart updated"); // Debugging log
-        } else {
-            console.error("Camp chart not initialized");
-        }
+        // Update camp details and chart
+        updateCampDetailsAndChart(all_camps[camp_index]);
     });
 
     // Refresh button for weather box
@@ -112,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const apiKey = "b5dab13c4329459e80660419250202"; // Replace with your WeatherAPI API key
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
-
         const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`;
         fetch(url)
             .then(response => response.json())
@@ -169,3 +161,48 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// Fetch all camps data from the server
+async function fetchAllCampsData() {
+    try {
+        const response = await fetch('/list_all_camps');
+        if (!response.ok) {
+            throw new Error("Failed to fetch camps data");
+        }
+        all_camps = await response.json();
+        console.log("Fetched all camps data:", all_camps);
+
+        // Initialize with the first camp's data
+        if (all_camps.length > 0) {
+            updateCampDetailsAndChart(all_camps[camp_index]);
+        } else {
+            console.error("No camps data available");
+        }
+    } catch (error) {
+        console.error("Error fetching camps data:", error);
+    }
+}
+
+// Update camp details and chart with the selected camp's data
+function updateCampDetailsAndChart(camp) {
+    // Update camp details in the UI
+    document.getElementById("camp-capacity").textContent = `${camp.num_people_present}/${camp.capacity}`;
+    document.getElementById("available-people").textContent = `${camp.num_people_present}`;
+    document.getElementById("food-supply").textContent = `${camp.food_stock_quota} Meals`;
+    document.getElementById("water-supply").textContent = `${camp.water_stock_litres} Litres`;
+    document.getElementById("camp-location").textContent = `${camp.location}`;
+
+    // Update the Relief Camps Chart
+    const campChart = Chart.getChart("campChart"); // Get the existing chart instance
+    if (campChart) {
+        campChart.data.datasets[0].data = [
+            camp.capacity,
+            camp.food_stock_quota,
+            camp.water_stock_litres
+        ];
+        campChart.update();
+        console.log("Camp chart updated");
+    } else {
+        console.error("Camp chart not initialized");
+    }
+}
