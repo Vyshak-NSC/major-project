@@ -51,12 +51,13 @@ def get_camp_data(cid):
         return jsonify(camp_data)
     return jsonify({"error": "Camp not found"}), 404
 
-@user_bp.route('/list_all_camps')
+@user_bp.route('/list_all_camps', methods=['GET','POST'])
 def list_all_camps():
     """
     Fetch a list of all camps using CampManager.
     """
-    camps = CampManager.list_all_camps()
+    sort_by = request.sort_by.data()
+    camps = CampManager.list_all_camps(sort_by)
     return jsonify(camps)
 
 ##errors
