@@ -20,16 +20,20 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    # login_manager.init_app(app)
-    # login_manager.login_view = 'users.login'
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message_category = "danger"
+
 
     # Register Blueprints
     from app.blueprints.users import user_bp
     from app.blueprints.admin import admin_bp
+    from app.blueprints.auth import auth_bp
+    
     from app.blueprints.local_auth import local_auth_bp
     
     app.register_blueprint(user_bp)
-    # app.register_blueprint(admin_bp)
+    app.register_blueprint(auth_bp)
     # app.register_blueprint(local_auth_bp)
     
     return app

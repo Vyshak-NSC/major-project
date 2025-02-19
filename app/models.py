@@ -1,5 +1,6 @@
 from .extensions import db
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model, UserMixin):
     uid = db.Column(db.Integer, primary_key=True)
@@ -15,6 +16,18 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.username}>"
+    
+    def set_password(self, password):
+        """Hash and store the password."""
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Check if the password matches the stored hash."""
+        return check_password_hash(self.password, password)
+    
+    # Override the get_id() method to return the uid as a string
+    def get_id(self):
+        return str(self.uid)  # Ensure the ID is returned as a string
 
 class Camp(db.Model):
     cid = db.Column(db.Integer, primary_key=True)

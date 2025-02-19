@@ -13,7 +13,7 @@
     {% endblock %}
 </head>
 <body>
-    {% if request.endpoint != 'user.login' %}
+    {% if request.endpoint != 'auth.login' %}
     <header>
         <div class="nav-container">
             <nav>
@@ -22,43 +22,43 @@
                     <li {% if request.endpoint == 'user.index' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.index') }}">Home</a>
                     </li>
-
                     <!-- Alert -->
                     <li {% if request.endpoint == 'user.alerts' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.alerts') }}">Alert</a>
                     </li>
-
                     <!-- Camps -->
                     <li {% if request.endpoint == 'user.camps' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.camps') }}">Camps</a>
                     </li>
-
                     <!-- Donation -->
                     <li {% if request.endpoint == 'user.donations' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.donations') }}">Donation</a>
                     </li>
-
                     <!-- Volunteer -->
                     <li {% if request.endpoint == 'user.volunteer' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.volunteer') }}">Volunteer</a>
                     </li>
-
                     <!-- Forums -->
                     <li {% if request.endpoint == 'user.forums' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.forums') }}">Forums</a>
                     </li>
-
                     <!-- Guide -->
                     <li {% if request.endpoint == 'user.guide' %} class="active" {% endif %}>
                         <a href="{{ url_for('user.guide') }}">Guide</a>
                     </li>
-
                     <!-- Logout -->
-                    <li class="logout"><a href="">Logout</a></li>
+                    <li class="logout">
+                        <a href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
                 </ul>
             </nav>
         </div>
     </header>
+    {% if current_user %}
+        <h1 style="color: red;">user:{{current_user.email}}</h1>
+    {% else%}
+    <h1 style="color: red;">Hi</h1>
+    {% endif %}
     {% endif %}
     {% block content %}
     {% endblock %}

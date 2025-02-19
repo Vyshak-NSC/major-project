@@ -2,14 +2,14 @@ from flask import jsonify, render_template, request
 from . import user_bp
 import json
 from app.db_manager import CampManager, CampNotFound
+from flask_login import login_required
+
 
 @user_bp.route('/')
+@user_bp.route('/index')
+@login_required
 def index():
     return render_template('user/index.html')
-
-@user_bp.route('/login')
-def login():
-    return render_template('auth/login.html')
 
 @user_bp.route('/camps')
 def camps():
