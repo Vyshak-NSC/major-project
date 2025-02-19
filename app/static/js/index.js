@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // Fetch all camps data from the server
 async function fetchAllCampsData() {
     try {
-        const response = await fetch('/list_all_camps');
+        const response = await fetch('/user/list_all_camps');
         if (!response.ok) {
             throw new Error("Failed to fetch camps data");
         }

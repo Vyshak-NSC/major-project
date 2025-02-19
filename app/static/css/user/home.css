@@ -211,7 +211,7 @@
     display: flex;
     flex-direction: column;
     gap: 1%; /* Percentage gap */
-    width: 55%; /* Occupy most of the box width */
+    width: 40%; /* Occupy most of the box width */
     align-items: flex-start;
     justify-content: flex-end;
     height: 100%;
@@ -248,6 +248,7 @@
     cursor: pointer;
     transition: background 0.3s ease;
     font-size: 0.9vw; /* vw for button size */
+    z-index: 10;
 }
 
 .next-camp-btn:hover {

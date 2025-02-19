@@ -5,7 +5,7 @@ let map;
 // Fetch Camps from Backend
 async function fetchCamps() {
     try {
-        const response = await fetch('/list_all_camps');
+        const response = await fetch('/user/list_all_camps');
         if (!response.ok) {
             throw new Error("Failed to fetch camp data");
         }
@@ -54,11 +54,18 @@ function updateMap(camps) {
         return;
     }
 
+    if (typeof currentCampIndex === "undefined" || currentCampIndex >= camps.length) {
+        console.error("Invalid currentCampIndex:", currentCampIndex);
+        return;
+    }
+
     const currentCamp = camps[currentCampIndex];
     if (!currentCamp || !currentCamp.coordinates) {
         console.error("Invalid camp data for map update.");
         return;
     }
+
+    console.log("Updating map for camp:", currentCamp);
 
     const center = [currentCamp.coordinates.lat, currentCamp.coordinates.lng];
 
@@ -79,6 +86,7 @@ function updateMap(camps) {
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${center[0]},${center[1]}`, "_blank");
     };
 }
+
 
 // Initialize Chart
 let resourcesChart;
