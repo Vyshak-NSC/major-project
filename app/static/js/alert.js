@@ -15,7 +15,7 @@ let lastDatahash = null;
 // Fetch sensor data from JSON file
 async function fetchSensorData() {
     try {
-        const response = await fetch("/get_sensor_data");
+        const response = await fetch("/user/get_sensor_data");
         if (!response.ok) {
             throw new Error("Failed to fetch sensor data");
         }

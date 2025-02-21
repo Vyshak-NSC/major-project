@@ -13,49 +13,52 @@
     {% endblock %}
 </head>
 <body>
+    {% set role_routes = {
+        'user': {
+            'home': 'user.index',
+            'alerts': 'user.alerts',
+            'camps': 'user.camps',
+            'donations': 'user.donations',
+            'volunteer': 'user.volunteer',
+            'forums': 'user.forums',
+            'guide': 'user.guide'
+        },
+        'admin':{
+            'home': 'admin.index',
+            'camps': 'admin.camps'
+        }
+        
+    } %}
+    
+    {% set user_role = current_user.role if current_user.is_authenticated else 'guest' %}
+
     {% if request.endpoint != 'auth.login' %}
     <header>
         <div class="nav-container">
             <nav>
                 <ul>
-                    <!-- Home -->
-                    <li {% if request.endpoint == 'user.index' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.index') }}">Home</a>
-                    </li>
-                    <!-- Alert -->
-                    <li {% if request.endpoint == 'user.alerts' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.alerts') }}">Alert</a>
-                    </li>
-                    <!-- Camps -->
-                    <li {% if request.endpoint == 'user.camps' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.camps') }}">Camps</a>
-                    </li>
-                    <!-- Donation -->
-                    <li {% if request.endpoint == 'user.donations' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.donations') }}">Donation</a>
-                    </li>
-                    <!-- Volunteer -->
-                    <li {% if request.endpoint == 'user.volunteer' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.volunteer') }}">Volunteer</a>
-                    </li>
-                    <!-- Forums -->
-                    <li {% if request.endpoint == 'user.forums' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.forums') }}">Forums</a>
-                    </li>
-                    <!-- Guide -->
-                    <li {% if request.endpoint == 'user.guide' %} class="active" {% endif %}>
-                        <a href="{{ url_for('user.guide') }}">Guide</a>
-                    </li>
-                    <!-- Logout -->
-                    <li class="logout">
-                        <a href="{{ url_for('auth.logout') }}">Logout</a>
-                    </li>
+                    {% if user_role in role_routes %}
+                        {% for label, endpoint in role_routes[user_role].items() %}
+                            <li {% if request.endpoint == endpoint %} class="active" {% endif %}>
+                                <a href="{{ url_for(endpoint) }}">{{ label.capitalize() }}</a>
+                            </li>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Logout button should always be shown when logged in -->
+                    {% if current_user.is_authenticated %}
+                        <li class="logout">
+                            <a href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    {% endif %}
+
                 </ul>
             </nav>
         </div>
     </header>
     {% if current_user %}
         <h1 style="color: red;">user:{{current_user.email}}</h1>
+        <h1 style="color: red;">:{{request.endpoint}}</h1>
     {% else%}
     <h1 style="color: red;">Hi</h1>
     {% endif %}

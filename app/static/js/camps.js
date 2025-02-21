@@ -1,4 +1,5 @@
-let camps = [];  // Ensure `camps` is initialized as an empty array
+// Global Variables
+let camps = []; // Ensure `camps` is initialized as an empty array
 let currentCampIndex = 0;
 let map;
 
@@ -18,16 +19,21 @@ async function fetchCamps() {
             return;
         }
 
-        currentCampIndex = 0;  // Reset index
-        initMap(camps[currentCampIndex]);  // Initialize map with first camp
-        updateCampDetails(camps);
+        initializeAppWithCamps();
     } catch (error) {
         console.error("Error fetching camps:", error);
         alert("Error fetching camps.");
     }
 }
 
-// Initialize Map (After Fetching Data)
+// Initialize App with Fetched Camps
+function initializeAppWithCamps() {
+    currentCampIndex = 0; // Reset index
+    initMap(camps[currentCampIndex]); // Initialize map with first camp
+    updateCampDetails(camps);
+}
+
+// Initialize Map
 function initMap(camp) {
     if (!camp || !camp.coordinates) {
         console.error("Invalid camp data for map initialization.");
@@ -39,7 +45,7 @@ function initMap(camp) {
     map = L.map("map").setView(center, 12);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     L.marker(center).addTo(map)
@@ -87,7 +93,6 @@ function updateMap(camps) {
     };
 }
 
-
 // Initialize Chart
 let resourcesChart;
 
@@ -128,7 +133,6 @@ function updateCampDetails(camps) {
     }
 
     const currentCamp = camps[currentCampIndex];
-
     if (!currentCamp) {
         console.error("Invalid camp data.");
         return;
@@ -154,21 +158,117 @@ document.getElementById("next-camp-btn").addEventListener("click", () => {
     }
 
     currentCampIndex = (currentCampIndex + 1) % camps.length;
-    // console.log("Switching to camp:", camps[currentCampIndex]);
     updateCampDetails(camps);
 });
 
-// Previous camp button
+// Previous Camp Button
 document.getElementById("prev-camp-btn").addEventListener("click", () => {
     if (!camps || camps.length === 0) {
         console.error("No camps available.");
         return;
     }
 
-    // Move to the previous camp (loops to the last camp if at the first)
     currentCampIndex = (currentCampIndex - 1 + camps.length) % camps.length;
-    console.log("Switching to previous camp:", camps[currentCampIndex]);
     updateCampDetails(camps);
+});
+
+// Request Supplies Button
+document.getElementById("request-btn").addEventListener("click", () => {
+    const currentCamp = camps[currentCampIndex];
+    const supplies = prompt(
+        `Enter supplies needed for Camp ${currentCamp.id} (${currentCamp.location}) in the format:\nfood,water,clothes,essentials\n(e.g., 500,2000,100,50)`
+    );
+
+    if (supplies) {
+        const [food, water, clothes, essentials] = supplies.split(",").map(Number);
+        alert(
+            `Request Submitted:\nCamp ID: ${currentCamp.id}\nLocation: ${currentCamp.location}\nSupplies Requested:\n- Food: ${food} meals\n- Water: ${water} liters\n- Clothes: ${clothes} units\n- Essentials: ${essentials} units`
+        );
+    } else {
+        alert("No supplies requested.");
+    }
+});
+
+// Search Functionality
+document.getElementById("search-btn").addEventListener("click", () => {
+    const searchInput = document.getElementById("search-input").value.trim().toLowerCase();
+    const currentCamp = camps[currentCampIndex];
+    const result = currentCamp.people.find((person) => person.toLowerCase() === searchInput);
+
+    const searchResult = document.getElementById("search-result");
+    if (result) {
+        searchResult.textContent = `${result} is currently registered at Camp ${currentCamp.id} (${currentCamp.location}).`;
+    } else {
+        searchResult.textContent = "No matching records found.";
+    }
+});
+
+// Show/Hide Request Form Popup
+const requestSlotBtn = document.getElementById('request-slot-btn');
+const requestFormPopup = document.getElementById('request-form-popup');
+const closeBtn = document.querySelector('.close-btn');
+
+requestSlotBtn.addEventListener('click', () => {
+    requestFormPopup.style.display = 'flex';
+});
+
+closeBtn.addEventListener('click', () => {
+    requestFormPopup.style.display = 'none';
+});
+
+window.addEventListener('click', (event) => {
+    if (event.target === requestFormPopup) {
+        requestFormPopup.style.display = 'none';
+    }
+});
+
+// Priority Dropdown Filtering
+function resetDropdown(dropdown) {
+    dropdown.innerHTML = `
+        <option value="" disabled selected>Select a Camp</option>
+        <option value="Camp A">Camp A</option>
+        <option value="Camp B">Camp B</option>
+        <option value="Camp C">Camp C</option>
+    `;
+}
+
+function filterAndDisplayOptions(dropdown, excludedValues) {
+    resetDropdown(dropdown);
+
+    Array.from(dropdown.options).forEach(option => {
+        if (excludedValues.includes(option.value)) {
+            option.remove();
+        }
+    });
+}
+
+document.getElementById("priority1").addEventListener("change", function () {
+    const selectedValue1 = this.value;
+    const priority2 = document.getElementById("priority2");
+    const priority3 = document.getElementById("priority3");
+
+    resetDropdown(priority2);
+    resetDropdown(priority3);
+
+    if (selectedValue1) {
+        filterAndDisplayOptions(priority2, [selectedValue1]);
+        filterAndDisplayOptions(priority3, [selectedValue1]);
+    }
+});
+
+document.getElementById("priority2").addEventListener("change", function () {
+    const selectedValue1 = document.getElementById("priority1").value;
+    const selectedValue2 = this.value;
+    const priority3 = document.getElementById("priority3");
+
+    resetDropdown(priority3);
+
+    if (selectedValue1 || selectedValue2) {
+        const excludedValues = [];
+        if (selectedValue1) excludedValues.push(selectedValue1);
+        if (selectedValue2) excludedValues.push(selectedValue2);
+        filterAndDisplayOptions(priority3, excludedValues);
+    }
 });
 
 // Fetch Camps on Page Load
