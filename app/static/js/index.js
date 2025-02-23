@@ -1,5 +1,6 @@
 let camp_index = 0; // Start with index 0 for easier array access
 let all_camps = []; // Store all camps data fetched from the server
+let notificationIntervalId = null; // To store the interval ID for notifications
 
 document.addEventListener("DOMContentLoaded", function () {
     // Fetch all camps data on page load
@@ -10,9 +11,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const donationChart = new Chart(donationCtx, {
         type: "doughnut",
         data: {
-            labels: ["Completed", "Pending"],
+            labels: ["Donated", "Spent"],
             datasets: [{
-                data: [75, 25],
+                data: [0,0],
                 backgroundColor: ["#007bff", "#ff6384"],
             }]
         },
@@ -23,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     enabled: true,
                     callbacks: {
                         label: function (context) {
-                            return `${context.label}: ${context.raw}%`;
+                            return `${context.label}: ${context.raw}Rs`;
                         }
                     }
                 }
@@ -39,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
             labels: ["Capacity", "Food Supply", "Water Supply"],
             datasets: [{
                 label: "Relief Camp Data",
-                data: [120,120,120],
+                data: [120, 120, 120],
                 backgroundColor: ["#007bff", "#28a745", "#ffc107"],
                 hoverBackgroundColor: ["#005bb5", "#218838", "#e0a800"],
                 borderWidth: 0,
@@ -74,8 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector(".next-camp-btn").addEventListener("click", function () {
         camp_index = (camp_index + 1) % all_camps.length; // Cycle through camps
         console.log("Next camp button clicked:", camp_index); // Debugging log
-
-        // Update camp details and chart
+        // Update camp details, chart, and notifications
         updateCampDetailsAndChart(all_camps[camp_index]);
     });
 
@@ -171,7 +171,6 @@ async function fetchAllCampsData() {
         }
         all_camps = await response.json();
         console.log("Fetched all camps data:", all_camps);
-
         // Initialize with the first camp's data
         if (all_camps.length > 0) {
             updateCampDetailsAndChart(all_camps[camp_index]);
@@ -185,6 +184,11 @@ async function fetchAllCampsData() {
 
 // Update camp details and chart with the selected camp's data
 function updateCampDetailsAndChart(camp) {
+    // Clear previous notification interval
+    if (notificationIntervalId) {
+        clearInterval(notificationIntervalId);
+    }
+
     // Update camp details in the UI
     document.getElementById("camp-capacity").textContent = `${camp.num_people_present}/${camp.capacity}`;
     document.getElementById("available-people").textContent = `${camp.num_people_present}`;
@@ -204,5 +208,55 @@ function updateCampDetailsAndChart(camp) {
         console.log("Camp chart updated");
     } else {
         console.error("Camp chart not initialized");
+    }
+
+    // Update the Donation Chart
+    const donationChart = Chart.getChart("myChart"); // Get the existing chart instance
+    if (donationChart) {
+        donationChart.data.datasets[0].data = [
+            camp.donations_received,
+            camp.donations_spent
+        ];
+        donationChart.update();
+        console.log("Donation chart updated");
+    } else {
+        console.error("Donation chart not initialized");
+    }
+
+    // Fetch and display notifications for the current camp
+    fetchAndDisplayNotifications(camp.cid);
+
+    // Periodically refresh notifications every 10 seconds
+    notificationIntervalId = setInterval(() => {
+        fetchAndDisplayNotifications(camp.cid);
+    }, 10000);
+}
+
+// Fetch and display notifications for a specific camp
+async function fetchAndDisplayNotifications(camp_id) {
+    try {
+        const response = await fetch(`/user/camp_notification/${camp_id}`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch notifications");
+        }
+        const notifications = await response.json();
+        
+        // Clear the existing notification list
+        const notifList = document.getElementById('notification-content');
+        notifList.innerHTML = '';
+
+        if (notifications.length === 0){
+            notifList.innerHTML = `<li>No announcements</li>`
+        }else{
+            // Append new notifications to the list
+            notifications.forEach(n => {
+                const item = document.createElement('li');
+                item.textContent = n.message;
+                notifList.appendChild(item);
+            });
+        }
+        console.log(`Fetched notifications for camp ${camp_id}`);
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
     }
 }

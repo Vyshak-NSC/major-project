@@ -52,8 +52,9 @@ class CampManager:
                 "food_stock_quota": camp.food_stock_quota,
                 "water_stock_litres": camp.water_stock_litres,
                 "contact_number": camp.contact_number,
-                "announcements": camp.announcements.split("\n") if camp.announcements else [],
-                "people_list": camp.people_list
+                "people_list": camp.people_list,
+                "donations_received": camp.donations_received,
+                "donations_spent": camp.donations_spent
             }
         raise CampNotFound(f"Camp with ID {cid} not found.")
 
@@ -93,8 +94,9 @@ class CampManager:
                 "food_stock_quota": camp.food_stock_quota,
                 "water_stock_litres": camp.water_stock_litres,
                 "contact_number": camp.contact_number,
-                "announcements": camp.announcements.split("\n") if camp.announcements else [],
-                "people_list": camp.people_list
+                "people_list": camp.people_list,
+                "donations_received": camp.donations_received,
+                "donations_spent": camp.donations_spent
             }
             for camp in camps
         ]

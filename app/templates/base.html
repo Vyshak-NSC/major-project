@@ -57,9 +57,11 @@
         </div>
     </header>
     {% if current_user %}
-        <h1 style="color: red;">user:{{current_user.email}}</h1>
-        <h1 style="color: red;">:{{request.endpoint}}</h1>
-    {% else%}
+        <span style="display: flex; gap: 50px;background-color: rgba(0,0,0,0.5);">
+            <h1 style="color: red;">user   :{{current_user.email}}</h1>
+            <h1 style="color: red;">enpoint:{{request.endpoint}}</h1>
+        </span>
+    {% else %}
     <h1 style="color: red;">Hi</h1>
     {% endif %}
     {% endif %}

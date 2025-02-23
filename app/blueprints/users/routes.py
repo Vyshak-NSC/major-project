@@ -1,4 +1,6 @@
 from flask import jsonify, render_template, request
+
+from app.models import CampNotification, Camp
 from . import user_bp
 import json
 from app.db_manager import CampManager, CampNotFound
@@ -69,6 +71,29 @@ def list_all_camps():
     camps = CampManager.list_all_camps()
     return jsonify(camps)
 
+
+@user_bp.route('/camp_notification/<int:camp_id>', methods=['GET'])
+def get_announcements(camp_id):
+    camp = Camp.query.get_or_404(camp_id)
+    announcements = CampNotification.query.filter_by(camp_id=camp_id).order_by(CampNotification.timestamp.desc()).all()
+
+    announcements_list = [
+        {
+            "id": a.aid,
+            "message": a.message,
+            "timestamp": a.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        for a in announcements
+    ]
+
+    return jsonify(announcements_list)
+
+
+
+
+
+
+
 ##errors
 @user_bp.errorhandler(CampNotFound)
 @login_required
@@ -77,3 +102,4 @@ def handle_camp_not_found(error):
     Global error handler for CampNotFound exceptions.
     """
     return jsonify({"error": str(error)}), 404
+

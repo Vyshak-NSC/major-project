@@ -41,5 +41,15 @@ class Camp(db.Model):
     food_stock_quota = db.Column(db.Integer, default=0)
     water_stock_litres = db.Column(db.Integer, default=0)
     contact_number = db.Column(db.String(20))
-    announcements = db.Column(db.Text, default="")
     people_list = db.Column(db.PickleType, default=[])
+    donations_received = db.Column(db.Float, default=0.0)
+    donations_spent = db.Column(db.Float, default=0.0)
+    
+    campNotifications = db.relationship('CampNotification', backref='camp', lazy=True)
+
+    
+class CampNotification(db.Model):
+    aid = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(500), nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+    camp_id = db.Column(db.Integer, db.ForeignKey('camp.cid'), nullable=False)
