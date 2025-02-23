@@ -1,7 +1,5 @@
 from flask import Flask, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager, login_required
+from flask_login import login_required
 
 from app.models import User
 from .config import Config

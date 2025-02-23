@@ -9,4 +9,4 @@ def index():
 @admin_bp.route('/camps')
 @login_required
 def camps():
-    return render_template('auth/camps.html')
+    return render_template('admin/camps.html')
