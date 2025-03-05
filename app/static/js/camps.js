@@ -122,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         initializeChart(currentCamp.food_stock_quota, currentCamp.water_stock_litres);
         updateMap();
+        fetchAndDisplayNotifications(currentCamp.cid);
     }
 
     // Add Event Listeners
@@ -149,6 +150,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? `${result} is currently registered at Camp ${currentCamp.id} (${currentCamp.location}).`
                 : "No matching records found.";
         });
+    }
+
+    // Fetch and Display Notifications for a each Camp
+    async function fetchAndDisplayNotifications(camp_id) {
+        try {
+            const response = await fetch(`/user/camp_notification/${camp_id}`);
+            if (!response.ok) throw new Error("Failed to fetch notifications");
+            const notifications = await response.json();
+
+            const announcementsList = document.getElementById("announcements-list");
+            announcementsList.innerHTML = ""; // Clear existing announcements
+
+            if (notifications.length === 0) {
+                const noAnnouncementItem = document.createElement("li");
+                noAnnouncementItem.textContent = "No announcements available.";
+                noAnnouncementItem.style.color = "gray";
+                noAnnouncementItem.style.fontStyle = "italic";
+                announcementsList.appendChild(noAnnouncementItem);
+            } else {
+                notifications.forEach(notification => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = notification.message;
+                    announcementsList.appendChild(listItem);
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            const announcementsList = document.getElementById("announcements-list");
+            announcementsList.innerHTML = ""; // Clear existing announcements
+            const errorItem = document.createElement("li");
+            errorItem.textContent = "Error loading announcements.";
+            errorItem.style.color = "red";
+            announcementsList.appendChild(errorItem);
+        }
     }
 
     // Fetch Camps on Page Load

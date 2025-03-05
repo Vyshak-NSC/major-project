@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model, UserMixin):
-    uid = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Integer, primary_key=True,autoincrement=True)
     username = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
@@ -53,3 +53,15 @@ class CampNotification(db.Model):
     message = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
     camp_id = db.Column(db.Integer, db.ForeignKey('camp.cid'), nullable=False)
+    
+
+class Volunteer(db.Model):
+    vid = db.Column(db.Integer, primary_key=True)  # Volunteer ID
+    name = db.Column(db.String(100), nullable=False)  # Name of the volunteer
+    email = db.Column(db.String(100), unique=True, nullable=False)  # Email address
+    mobile = db.Column(db.String(20))  # Phone number
+    location = db.Column(db.String(100))  # Location of the volunteer
+    role_id = db.Column(db.Integer, nullable=False)  # Role ID (e.g., 1 for Admin, 2 for Volunteer, etc.)
+
+    def __repr__(self):
+        return f"<Volunteer {self.name}>"

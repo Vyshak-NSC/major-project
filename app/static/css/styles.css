@@ -11,7 +11,17 @@ body {
     max-height: 100vh;
     position: relative; /* Important for positioning the pseudo-element */
 }
-
+/* Dark Overlay using Pseudo-Element */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Adjust opacity (0.5 = 50% dark) */
+    z-index: -1; /* Place it behind the content */
+  }
 /* Navigation Bar */
 .nav-container {
     background:  linear-gradient(to right, #003564, #337429);
@@ -60,3 +70,17 @@ nav li:last-child {
     padding: 1.5vh 50%;
     transform: scale(1.1); /* Highlight active link */
 }
+/* 
+.logout {
+    background: #ff6f61;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .logout:hover {
+    background: #ff3b2f;
+  } */

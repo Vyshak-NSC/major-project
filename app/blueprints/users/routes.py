@@ -1,10 +1,10 @@
-from flask import jsonify, render_template, request
+from flask import jsonify, redirect, render_template, request, url_for
 
 from app.models import CampNotification, Camp
 from . import user_bp
 import json
-from app.db_manager import CampManager, CampNotFound
-from flask_login import login_required
+from app.db_manager import CampManager, CampNotFound, VolunteerManager
+from flask_login import current_user, login_required
 
 
 @user_bp.route('/')
@@ -43,7 +43,40 @@ def guide():
 @user_bp.route('/volunteer')
 @login_required
 def volunteer():
-    return render_template('user/volunteer.html')
+    user = current_user
+    return render_template('user/volunteer.html', user = user)
+
+@user_bp.route('/submit_volunteer', methods=['POST','GET'])
+def submit_volunteer():
+    """
+    Handle the form submission for adding a new volunteer.
+    """
+    try:
+        # Extract form data
+        name = request.form.get('name')
+        email = request.form.get('email')
+        mobile = request.form.get('mobile')
+        location = request.form.get('location')
+        role_id = request.form.get('role_id')
+
+        # Validate required fields
+        # if not name or not email or not role_id:
+        print('\n\n\n\n\n\n\n',name,email,role_id,location,mobile)
+        #     return redirect(url_for('user.volunteer'))  # Redirect back to the form page
+
+        # Add the volunteer using VolunteerManager
+        response, status_code = VolunteerManager.add_volunteer(
+            name=name,
+            email=email,
+            mobile=mobile,
+            location=location,
+            role_id=role_id
+        )
+
+        return redirect(url_for('user.volunteer'))
+    
+    except Exception as e:
+        return redirect(url_for('user.alerts'))
 
 @user_bp.route('/forums')
 @login_required

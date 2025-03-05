@@ -1,16 +1,16 @@
 // Handle Form Submission
 document.getElementById('volunteer-form').addEventListener('submit', function (e) {
-    e.preventDefault();
+    // e.preventDefault();
 
     // Get form values
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
-    const phone = document.getElementById('phone').value;
+    const mobile = document.getElementById('mobile').value;
     const location = document.getElementById('location').value;
-    const roleId = document.getElementById('role-id').value;
+    const role_id = document.getElementById('role_id').value;
 
     // Display confirmation message
-    alert(`Thank you, ${name}! Your application for Role ID ${roleId} has been submitted successfully.`);
+    // alert(`Thank you, ${name}! Your application for Role ID ${roleId} has been submitted successfully.`);
 
     // Reset form
     document.getElementById('volunteer-form').reset();

@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required
 from app.extensions import db, bcrypt
 from app.models import User
 from . import auth_bp
-
+from werkzeug.security import generate_password_hash
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -31,16 +31,15 @@ def register():
         username = request.values.get('username','user')
         password = request.values.get('password')
 
-        # Hash the password before storing it
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        # # Hash the password before storing it
+        # hashed_password = generate_password_hash(password)
 
-        user = User(username=username, email=email, password=hashed_password, role='user')
+        user = User(username=username, email=email, role='user')
+        user.set_password(password)
         db.session.add(user)
         db.session.commit()
         login_user(user)
         return redirect(url_for('user.index'))
-
-        flash('Account created! You can now log in.', 'success')
     return redirect(url_for('auth.login'))
 
 

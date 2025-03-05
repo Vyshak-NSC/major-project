@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block csscontent%}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/admin/user.css')}}">
+{% endblock %}
+
+{% block content %}
+    <!-- Main Content -->
+    <div class="container">
+        <div class="content">
+            <h1>User Management</h1>
+            <!-- Filter Options -->
+            <div class="filter-section">
+                <label style="color: white;">Filter by Name:</label>
+                <input type="text" id="name-filter" placeholder="Enter name..." />
+                
+                <label style="color: white;">Filter by Location:</label>
+                <input type="text" id="location-filter" placeholder="Enter location..." />
+                
+                
+                <button id="clear-filters">Clear Filters</button>
+            </div>
+
+            <!-- Add User Button -->
+            <button id="add-user-btn" class="btn">Add New User</button>
+
+            <!-- User Table -->
+            <div class="user-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>UID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Location</th>
+                            <th>Phone Number</th>
+                            <th>Role</th>
+                            <th>Associated Camp Id</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list">
+                        <!-- Dynamically populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New User</h2>
+            <form id="user-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required />
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required />
+
+                <label for="location">Location:</label>
+                <input type="text" id="location" name="location" required />
+
+                <label for="state">Email:</label>
+                <input type="text" id="state" name="state" required />
+
+                <label for="phone">Phone Number:</label>
+                <input type="text" id="phone" name="phone" required />
+                
+                <label for="role">Role:</label>
+                <input type="text" id="role" name="role" required />
+                
+                <label for="associated-camp-id">Associated Camp Id:</label>
+                <input type="text" id="associated-camp-id" name="associated-camp-id" required />
+
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block jscontent %}
+    <script src="{{ url_for('static', filename='js/admin/user.js') }}"></script>
+{% endblock %}
