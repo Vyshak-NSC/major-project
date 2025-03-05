@@ -199,6 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 button.addEventListener("click", (e) => {
                     const userId = e.target.dataset.id;
                     openModalForEdit(userId);
+                    alert(userId)
                 });
             });
 

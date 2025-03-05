@@ -111,7 +111,7 @@ def edit_user(uid):
 
 
 
-@admin_bp.route('/delete_user/<int:uid>', methods=['POST'])
+@admin_bp.route('/delete_user/<int:uid>', methods=['POST','DELETE'])
 @login_required
 def delete_user(uid):
     """
