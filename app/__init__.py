@@ -34,11 +34,13 @@ def create_app():
     from app.blueprints.admin import admin_bp
     from app.blueprints.auth import auth_bp
     from app.blueprints.local_auth import local_auth_bp
+    from app.blueprints.warehouse_manager import warehouse_bp
     
     app.register_blueprint(user_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(local_auth_bp)
+    app.register_blueprint(warehouse_bp)
     
     
     @app.route('/')
