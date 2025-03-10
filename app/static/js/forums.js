@@ -1,10 +1,6 @@
-// document.addEventListener("DOMContentLoaded", function () {
-//     loadThreads();
-//     const questionForm = document.getElementById("question-form");
-//     if (questionForm) {
-//         questionForm.addEventListener("submit", submitQuestion);
-//     }
-// });
+document.addEventListener("DOMContentLoaded", function () {
+    loadThreads();
+});
 
 function loadThreads() {
     fetch("/user/forums/threads")
