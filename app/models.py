@@ -8,8 +8,6 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     associated_camp_id = db.Column(db.Integer, db.ForeignKey('camp.cid'))
-    friend_list = db.Column(db.PickleType, default=[])
-    family_list = db.Column(db.PickleType, default=[])
     role = db.Column(db.String(20), nullable=False, default='user')  # user, admin, local_auth
     location = db.Column(db.String(100))
     mobile = db.Column(db.String(20))
@@ -82,3 +80,10 @@ class Reply(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+class Feedback(db.Model):
+    fid = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name=db.Column(db.String(100), nullable=False)
+    email=db.Column(db.String(100), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+    

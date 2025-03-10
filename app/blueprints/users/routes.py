@@ -1,10 +1,11 @@
 from flask import flash, jsonify, redirect, render_template, request, url_for
 from .utils import ThreadForm, VolunteerForm
-from app.models import CampNotification, Camp
+from app.models import CampNotification, Camp, Feedback
 from . import user_bp
 import json
 from app.db_manager import CampManager, CampNotFound, VolunteerManager, ForumManager
 from flask_login import current_user, login_required
+from app.extensions import db
 
 @user_bp.route('/')
 @user_bp.route('/index')
@@ -115,6 +116,20 @@ def add_reply():
 
     result = ForumManager.create_reply(current_user.uid, thread_id, content)
     return jsonify(result), 201
+
+
+@user_bp.route('/submit_feedback', methods=['POST'])
+@login_required
+def submit_feedback():
+    name = request.values.get('feedback-name')
+    email = request.values.get('feedback-email')
+    message = request.values.get('feedback-message')
+    
+    print(name,email,message)
+    new_feedback = Feedback(name=name,email=email,message=message)
+    db.session.add(new_feedback)
+    db.session.commit()
+    return redirect(url_for('user.forums'))
 
 @user_bp.route('/get_camp_data/<int:cid>')
 @login_required
