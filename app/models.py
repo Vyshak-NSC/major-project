@@ -65,3 +65,20 @@ class Volunteer(db.Model):
 
     def __repr__(self):
         return f"<Volunteer {self.name}>"
+
+class Thread(db.Model):
+    tid = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    replies = db.relationship('Reply', backref='thread', lazy=True)
+
+
+class Reply(db.Model):
+    rid = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    thread_id = db.Column(db.Integer, db.ForeignKey('thread.tid'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())

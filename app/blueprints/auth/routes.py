@@ -11,11 +11,11 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
-        if user and bcrypt.check_password_hash(user.password, password) and user.role == 'user':
+        if user and user.check_password(password) and user.role == 'user':
             login_user(user)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('user.index'))
-        elif user and bcrypt.check_password_hash(user.password, password) and user.role == 'admin':
+        elif user and user.check_password(password) and user.role == 'admin':
             login_user(user)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('admin.index'))
@@ -30,9 +30,6 @@ def register():
         email    = request.values.get('email')
         username = request.values.get('username','user')
         password = request.values.get('password')
-
-        # # Hash the password before storing it
-        # hashed_password = generate_password_hash(password)
 
         user = User(username=username, email=email, role='user')
         user.set_password(password)
@@ -50,17 +47,14 @@ def adminregister():
         username = request.values.get('username','admin')
         password = request.values.get('password')
 
-        # Hash the password before storing it
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-        user = User(username=username, email=email, password=hashed_password, role='admin')
+        user = User(username=username, email=email, role='admin')
+        user.set_password(password)
         db.session.add(user)
         db.session.commit()
         login_user(user)
         flash('Account created! You can now log in.', 'success')
         return redirect(url_for('admin.index'))
-
-    return render_template('auth/login.html')
+    return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/logout')

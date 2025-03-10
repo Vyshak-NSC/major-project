@@ -1,5 +1,6 @@
 from werkzeug.security import generate_password_hash
 from .models import Camp, Volunteer, User, db
+from .models import Thread, Reply
 
 class CampManager:
     @staticmethod
@@ -323,3 +324,60 @@ class UserNotFound(Exception):
     def __init__(self, message="User not found"):
         self.message = message
         super().__init__(self.message)
+
+
+class ForumManager:
+    @staticmethod
+    @staticmethod
+    def create_thread(user_id, title, content):
+        """
+        Create a new forum thread.
+        """
+        new_thread = Thread(user_id=user_id, title=title, content=content)
+        db.session.add(new_thread)
+        db.session.commit()
+        return {"message": "Thread created successfully", "thread_id": new_thread.tid}
+
+    @staticmethod
+    def get_all_threads():
+        """
+        Retrieve all threads.
+        """
+        threads = Thread.query.order_by(Thread.timestamp.desc()).all()
+        return [
+            {
+                "tid": thread.tid,
+                "title": thread.title,
+                "content": thread.content,
+                "user_id": thread.user_id,
+                "timestamp": thread.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            for thread in threads
+        ]
+
+    @staticmethod
+    def create_reply(user_id, thread_id, content):
+        """
+        Create a new reply to a thread.
+        """
+        new_reply = Reply(user_id=user_id, thread_id=thread_id, content=content)
+        db.session.add(new_reply)
+        db.session.commit()
+        return {"message": "Reply added successfully", "reply_id": new_reply.rid}
+
+    @staticmethod
+    def get_replies_for_thread(thread_id):
+        """
+        Retrieve all replies for a specific thread.
+        """
+        replies = Reply.query.filter_by(thread_id=thread_id).order_by(Reply.timestamp).all()
+        return [
+            {
+                "rid": reply.rid,
+                "thread_id": reply.thread_id,
+                "user_id": reply.user_id,
+                "content": reply.content,
+                "timestamp": reply.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            for reply in replies
+        ]
