@@ -82,6 +82,15 @@ def get_threads():
     threads = ForumManager.get_all_threads()
     return jsonify(threads)
 
+@user_bp.route('/forums/get_thread/<int:thread_id>', methods=['GET'])
+@login_required
+def get_thread(thread_id):
+    """
+    Retrieve all forum threads.
+    """
+    threads = ForumManager.get_replies_for_thread(thread_id)
+    return jsonify(threads)
+
 @user_bp.route('/forums/add_thread', methods=['GET', 'POST'])
 @login_required
 def add_thread():
@@ -92,7 +101,7 @@ def add_thread():
 
 
 
-@user_bp.route('/forum/replies/<int:thread_id>', methods=['GET'])
+@user_bp.route('/forums/replies/<int:thread_id>', methods=['GET'])
 @login_required
 def get_replies(thread_id):
     """

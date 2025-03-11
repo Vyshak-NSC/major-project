@@ -350,6 +350,35 @@ class ForumManager:
                 "title": thread.title,
                 "content": thread.content,
                 "user_id": thread.user_id,
+                "replies": [
+                    {
+                        "reply_id": reply.rid,
+                        "content": reply.content,
+                        "user_id": reply.user_id,
+                        "username": (User.query.get(reply.user_id).username if User.query.get(reply.user_id) else ''),
+                        "timestamp": reply.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    for reply in thread.replies
+                ],  # Convert replies into a JSON-serializable list
+                "timestamp": thread.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "reply_count": len(thread.replies)
+            }
+            for thread in threads
+        ]
+
+    @staticmethod
+    def get_thread(thread_id):
+        """
+        Retrieve all threads.
+        """
+        threads = Thread.query.filter_by(tid=thread_id)
+        return [
+            {
+                "tid": thread.tid,
+                "title": thread.title,
+                "content": thread.content,
+                "user_id": thread.user_id,
+                "replies": thread.replies,
                 "timestamp": thread.timestamp.strftime("%Y-%m-%d %H:%M:%S")
             }
             for thread in threads

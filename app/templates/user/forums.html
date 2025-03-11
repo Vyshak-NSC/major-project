@@ -51,10 +51,10 @@
                 <h2>Feedback Form</h2>
                 <form action="{{ url_for('user.submit_feedback') }}" method="post" id="feedback-form">
                     <label for="feedback-name">Name:</label>
-                    <input type="text" id="feedback-name" name="feedback-name" placeholder="Your name" required>
+                    <input type="text" id="feedback-name" name="feedback-name" value="{{ current_user.username }}" placeholder="Your name" required>
 
                     <label for="feedback-email">Email:</label>
-                    <input type="email" id="feedback-email" name="feedback-email" placeholder="Your email" required>
+                    <input type="email" id="feedback-email" name="feedback-email" value="{{ current_user.email }}" placeholder="Your email" required>
                     
                     <label for="feedback-message">Message:</label>
                     <textarea id="feedback-message" name="feedback-message" placeholder="Your feedback or suggestions" required></textarea>

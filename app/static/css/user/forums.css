@@ -132,68 +132,66 @@
     border: 1px solid rgba(255, 255, 255, 0.2); /* Optional: Add border for clarity */
     border-radius: 15px;
     color: #fff;
-    padding: 1vh 1.5vw; /* Padding for the scrollable container */
     margin-bottom: 2vh; /* Space below the container */
 }
 
+
+/* Forum Threads */
 .thread-list {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.8vh; /* Slightly reduced gap */
+    gap: 1vh;
 }
 
 .thread-item {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 1vh 1.5vw; /* Slightly reduced padding */
+    padding: .1vh 1.5vw;
+    margin-left: -5%;
     border-radius: 15px;
     transition: all 0.3s ease;
 }
 
-.thread-item:hover {
-    transform: translateY(-5px); /* Lift effect on hover */
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Enhanced shadow */
-}
-
 .thread-header {
     display: flex;
+    margin-top: 20px;
     justify-content: space-between;
     margin-bottom: 0.5vh;
     transition: transform 0.3s ease;
 }
 
 .thread-header:hover {
-    transform: translateX(5px); /* Slide effect on hover */
+    transform: translateX(5px);
 }
 
 .thread-title {
-    font-size: 1.1rem; /* Slightly reduced font size */
+    font-size: 1.1rem;
     font-weight: bold;
     transition: color 0.3s ease;
 }
 
 .thread-title:hover {
-    color: #ffdd57; /* Brighten title on hover */
-}
-
-.thread-author {
-    font-size: 0.8rem; /* Slightly reduced font size */
-    color: #a2fd65;
-    transition: color 0.3s ease;
-}
-
-.thread-author:hover {
-    color: #fff; /* Brighten author name on hover */
+    color: #ffdd57;
 }
 
 .thread-body {
-    margin-bottom: 0.8vh; /* Slightly reduced margin */
-    font-size: 0.9rem; /* Slightly reduced font size */
+    margin-bottom: 0.8vh;
+    font-size: 0.9rem;
     transition: opacity 0.3s ease;
 }
 
 .thread-body:hover {
-    opacity: 0.8; /* Fade effect on hover */
+    opacity: 0.8;
+}
+
+.replies {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.reply {
+    margin-top: 5px;
+    font-size: 0.9rem;
 }
 
 /* Reply Button */
@@ -210,8 +208,8 @@
 }
 
 .reply-button:hover {
-    background: #005bb5; /* Darker blue on hover */
-    transform: scale(1.05); /* Slight zoom effect */
+    background: #005bb5;
+    transform: scale(1.05);
 }
 
 /* Animations */
@@ -223,6 +221,7 @@
         opacity: 1;
     }
 }
+
 @keyframes slideInFromTop {
     0% {
         transform: translateY(-100%);
