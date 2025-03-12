@@ -94,10 +94,10 @@ def get_thread(thread_id):
 @user_bp.route('/forums/add_thread', methods=['GET', 'POST'])
 @login_required
 def add_thread():
-    form = ThreadForm()
-    result = ForumManager.create_thread(current_user.uid, form.title.data, form.content.data)
-    flash("Thread created successfully!", "success")
-    return redirect(url_for('user.forums'))  # Adjust to your forum page route
+    title = request.values.get('title')
+    content = request.values.get('content')
+    ForumManager.create_thread(current_user.uid, title, content)
+    return jsonify({"status": "success"}), 201
 
 
 
@@ -130,11 +130,10 @@ def submit_feedback():
     email = request.values.get('feedback-email')
     message = request.values.get('feedback-message')
     
-    print(name,email,message)
     new_feedback = Feedback(name=name,email=email,message=message)
     db.session.add(new_feedback)
     db.session.commit()
-    return redirect(url_for('user.forums'))
+    return {"status": "success"}, 201
 
 @user_bp.route('/get_camp_data/<int:cid>')
 @login_required

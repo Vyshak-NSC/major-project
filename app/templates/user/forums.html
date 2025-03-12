@@ -32,13 +32,13 @@
             <!-- Ask a Question Section -->
             <div class="box ask-question">
                 <h2>Ask a Question</h2>
-                <form action="{{ url_for('user.add_thread') }}" method="post" id="question-form">
+                <form id="question-form">
                     <label for="question-title">Title:</label>
-                    {{ threadForm.title(id='question-title') }}
-
+                    <input type="text" id="question-title" name="title" required>
+            
                     <label for="question-body">Details:</label>
-                    {{ threadForm.content(id='question-body') }}
-
+                    <textarea id="question-body" name="content" required></textarea>
+            
                     <button type="submit">Submit Question</button>
                 </form>
             </div>
@@ -49,7 +49,7 @@
             <!-- Feedback Form Section -->
             <div class="box feedback-section">
                 <h2>Feedback Form</h2>
-                <form action="{{ url_for('user.submit_feedback') }}" method="post" id="feedback-form">
+                <form id="feedback-form">
                     <label for="feedback-name">Name:</label>
                     <input type="text" id="feedback-name" name="feedback-name" value="{{ current_user.username }}" placeholder="Your name" required>
 
