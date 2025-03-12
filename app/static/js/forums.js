@@ -1,9 +1,13 @@
+// load threads on page load
 document.addEventListener("DOMContentLoaded", function () {
     loadThreads();
 });
 
+// 🔹 Load threads (Reusable function)
+// Fetch threads from the server and display them in the thread list
+// Load threads on page load and after adding a new thread
 function loadThreads() {
-    fetch("/user/forums/threads")
+    fetch("/user/forums/get_threads")
         .then(response => response.json())
         .then(data => {
             const threadList = document.getElementById("thread-list");
@@ -21,7 +25,8 @@ function loadThreads() {
         .catch(error => console.error("Error loading threads:", error));
 }
 
-// 🔹 Create a thread element (Modular function)
+// 🔹 Create a thread element (Reusable function)
+// Create a new list item element for the thread
 function createThreadElement(thread) {
     const threadItem = document.createElement("li");
     threadItem.className = "thread-item";
@@ -58,6 +63,7 @@ function createThreadElement(thread) {
         </form>
     `;
 
+    // attach event listeners to the thread
     attachEventListeners(threadItem, thread.tid);
     return threadItem;
 }
@@ -70,18 +76,21 @@ function attachEventListeners(threadItem, threadId) {
     const repliesDiv = threadItem.querySelector(".replies");
 
     // Show reply form on button click
+    // Button: "Reply"
     replyButton.addEventListener("click", function () {
         replyButton.style.display = "none";
         replyForm.style.display = "block";
     });
 
     // Handle reply form submission
+    // Form: "Reply submit"
     replyForm.addEventListener("submit", function (event) {
         event.preventDefault();
         submitReply(replyForm, threadId);
     });
 
     // Toggle replies display
+    // Button: "Replies: x"
     if (toggleRepliesBtn) {
         toggleRepliesBtn.addEventListener("click", function () {
             repliesDiv.style.display = "block"; 
@@ -90,9 +99,10 @@ function attachEventListeners(threadItem, threadId) {
     }
 }
 
-// 🔹 Submit reply (Separate function)
+//  Submit reply (Reusable function)
+//  Create a new reply for the thread
 function submitReply(replyForm, threadId) {
-    fetch('/user/forums/reply', {
+    fetch('/user/forums/add_reply', {
         method: 'POST',
         body: new FormData(replyForm),
         headers: { "Accept": "application/json" }
@@ -109,7 +119,8 @@ function submitReply(replyForm, threadId) {
     .catch(error => console.error("Error submitting reply:", error));
 }
 
-// 🔹 Toggle replies (Reusable function)
+//  Toggle replies (Reusable function)
+// Open the replies section for a thread
 function toggleReplies(threadId) {
     const toggleBtn = document.querySelector(`.toggle-replies-btn[data-thread-id="${threadId}"]`);
     if (toggleBtn) {
@@ -117,9 +128,8 @@ function toggleReplies(threadId) {
     }
 }
 
-
-
-
+//  Submit feedback
+//  Submit feedback form to the server
 function submitFeedback(feedbackForm) {
     fetch("/user/submit_feedback", {
         method: "POST",
@@ -128,7 +138,19 @@ function submitFeedback(feedbackForm) {
     })
     .then(response => response.json())
     .then(result => {
-            feedbackForm.reset(); // Clear the form after submission
+        if (result.status === "success") {
+            feedbackForm.reset(); // Clear the form
+
+            // Show success message
+            const successMessage = document.createElement("p");
+            successMessage.textContent = "Feedback submitted successfully!";
+            successMessage.style.color = "green";
+            successMessage.style.marginTop = "10px";
+            feedbackForm.appendChild(successMessage);
+
+            // Remove success message after 5 seconds
+            setTimeout(() => successMessage.remove(), 5000);
+        }
     })
     .catch(error => {
         console.error("Error submitting feedback:", error);

@@ -63,6 +63,16 @@ class Volunteer(db.Model):
 
     def __repr__(self):
         return f"<Volunteer {self.name}>"
+    
+class VolunteerHistory(db.Model):
+    vhid = db.Column(db.Integer, primary_key=True)
+    vid = db.Column(db.Integer, db.ForeignKey('volunteer.vid'), nullable=False)
+    camp_id = db.Column(db.Integer, db.ForeignKey('camp.cid'), nullable=False)
+    role_id = db.Column(db.Integer, nullable=False)
+    
+    volunteer = db.relationship('Volunteer', backref='volunteer_history', lazy=True)
+    camp = db.relationship('Camp', backref='volunteer_history', lazy=True)
+
 
 class Thread(db.Model):
     tid = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -86,4 +96,3 @@ class Feedback(db.Model):
     name=db.Column(db.String(100), nullable=False)
     email=db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(500), nullable=False)
-    

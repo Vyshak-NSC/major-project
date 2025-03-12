@@ -1,7 +1,8 @@
 from werkzeug.security import generate_password_hash
-from .models import Camp, Volunteer, User, db
+from .models import Camp, Volunteer, User, VolunteerHistory, db
 from .models import Thread, Reply
 
+################## Camps Management Functions ##################
 class CampManager:
     @staticmethod
     def create_camp(camp_name, location, coordinates_lat, coordinates_lng, capacity, contact_number, status="Operational"):
@@ -102,122 +103,9 @@ class CampManager:
             }
             for camp in camps
         ]
-        
-
-#errors
-class CampNotFound(Exception):
-    """
-    Custom exception for when a camp is not found.
-    """
-    def __init__(self, message="Camp not found"):
-        self.message = message
-        super().__init__(self.message)
-        
-class VolunteerManager:
-    @staticmethod
-    def add_volunteer(name, email, mobile, location, role_id):
-        """
-        Add a new volunteer to the database.
-        """
-        try:
-            # Validate required fields
-            # if not name or not email or not role_id:
-            #     raise ValueError("Name, email, and role ID are required")
-
-            # Check if the email is already registered
-            if Volunteer.query.filter_by(email=email).first():
-                raise ValueError("Email already registered")
-
-            # Create a new volunteer
-            new_volunteer = Volunteer(
-                name=name,
-                email=email,
-                mobile=mobile,
-                location=location,
-                role_id=role_id
-            )
-            db.session.add(new_volunteer)
-            db.session.commit()
-
-            return {"message": "Volunteer registered successfully", "volunteer_id": new_volunteer.vid}, 201
-        except Exception as e:
-            return {"error": str(e)}, 500
-
-    @staticmethod
-    def get_volunteer(vid):
-        """
-        Retrieve a volunteer's details by their ID.
-        """
-        volunteer = Volunteer.query.get(vid)
-        if volunteer:
-            return {
-                "vid": volunteer.vid,
-                "name": volunteer.name,
-                "email": volunteer.email,
-                "mobile": volunteer.mobile,
-                "location": volunteer.location,
-                "role_id": volunteer.role_id
-            }
-        raise VolunteerNotFound(f"Volunteer with ID {vid} not found.")
-
-    @staticmethod
-    def update_volunteer(vid, **kwargs):
-        """
-        Update a volunteer's details. Pass keyword arguments for fields to update.
-        Example: update_volunteer(vid, mobile="1234567890", location="New City")
-        """
-        volunteer = Volunteer.query.get(vid)
-        if volunteer:
-            for key, value in kwargs.items():
-                if hasattr(volunteer, key):
-                    setattr(volunteer, key, value)
-            db.session.commit()
-            return volunteer
-        return None
-
-    @staticmethod
-    def delete_volunteer(vid):
-        """
-        Delete a volunteer by their ID.
-        """
-        volunteer = Volunteer.query.get(vid)
-        if volunteer:
-            db.session.delete(volunteer)
-            db.session.commit()
-            return True
-        return False
-
-    @staticmethod
-    def list_all_volunteers():
-        """
-        Retrieve a list of all volunteers.
-        """
-        volunteers = Volunteer.query.all()
-        return [
-            {
-                "vid": volunteer.vid,
-                "name": volunteer.name,
-                "email": volunteer.email,
-                "mobile": volunteer.mobile,
-                "location": volunteer.location,
-                "role_id": volunteer.role_id
-            }
-            for volunteer in volunteers
-        ]
 
 
-# Errors
-class VolunteerNotFound(Exception):
-    """
-    Custom exception for when a volunteer is not found.
-    """
-    def __init__(self, message="Volunteer not found"):
-        self.message = message
-        super().__init__(self.message)
-
-
-
-
+################## User Management Functions ##################
 class UserManager:
     @staticmethod
     def add_user(username, email, password, role="user"):
@@ -316,16 +204,118 @@ class UserManager:
         ]
 
 
-# Errors
-class UserNotFound(Exception):
-    """
-    Custom exception for when a user is not found.
-    """
-    def __init__(self, message="User not found"):
-        self.message = message
-        super().__init__(self.message)
+
+################## Volunteer Management Functions ##################
+class VolunteerManager:
+    @staticmethod
+    def add_volunteer(name, email, mobile, location, role_id):
+        """
+        Add a new volunteer to the database.
+        """
+        try:
+            # Validate required fields
+            # if not name or not email or not role_id:
+            #     raise ValueError("Name, email, and role ID are required")
+
+            # Check if the email is already registered
+            if Volunteer.query.filter_by(email=email).first():
+                raise ValueError("Email already registered")
+
+            # Create a new volunteer
+            new_volunteer = Volunteer(
+                name=name,
+                email=email,
+                mobile=mobile,
+                location=location,
+                role_id=role_id
+            )
+            db.session.add(new_volunteer)
+            db.session.commit()
+
+            return {"message": "Volunteer registered successfully", "volunteer_id": new_volunteer.vid}, 201
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    @staticmethod
+    def get_volunteer(vid):
+        """
+        Retrieve a volunteer's details by their ID.
+        """
+        volunteer = Volunteer.query.get(vid)
+        if volunteer:
+            return {
+                "vid": volunteer.vid,
+                "name": volunteer.name,
+                "email": volunteer.email,
+                "mobile": volunteer.mobile,
+                "location": volunteer.location,
+                "role_id": volunteer.role_id
+            }
+        raise VolunteerNotFound(f"Volunteer with ID {vid} not found.")
+
+    @staticmethod
+    def update_volunteer(vid, **kwargs):
+        """
+        Update a volunteer's details. Pass keyword arguments for fields to update.
+        Example: update_volunteer(vid, mobile="1234567890", location="New City")
+        """
+        volunteer = Volunteer.query.get(vid)
+        if volunteer:
+            for key, value in kwargs.items():
+                if hasattr(volunteer, key):
+                    setattr(volunteer, key, value)
+            db.session.commit()
+            return volunteer
+        return None
+
+    @staticmethod
+    def delete_volunteer(vid):
+        """
+        Delete a volunteer by their ID.
+        """
+        volunteer = Volunteer.query.get(vid)
+        if volunteer:
+            db.session.delete(volunteer)
+            db.session.commit()
+            return True
+        return False
+
+    @staticmethod
+    def list_all_volunteers():
+        """
+        Retrieve a list of all volunteers.
+        """
+        volunteers = Volunteer.query.all()
+        return [
+            {
+                "vid": volunteer.vid,
+                "name": volunteer.name,
+                "email": volunteer.email,
+                "mobile": volunteer.mobile,
+                "location": volunteer.location,
+                "role_id": volunteer.role_id
+            }
+            for volunteer in volunteers
+        ]
+    
+    @staticmethod
+    def get_volunteer_history():
+        """
+        Retrieve a list of all volunteers.
+        """
+        volunteers = VolunteerHistory.query.all()
+        return [
+            {
+                "vhid": volunteer.vhid,
+                "vid": volunteer.vid,
+                "camp_id": volunteer.camp_id,
+                "role_id": volunteer.role_id
+            }
+            for volunteer in volunteers
+        ]
 
 
+################## Forum Management Functions ##################
 class ForumManager:
     @staticmethod
     @staticmethod
@@ -410,3 +400,32 @@ class ForumManager:
             }
             for reply in replies
         ]
+
+
+################## Custom Exceptions ##################
+
+class CampNotFound(Exception):
+    """
+    Custom exception for when a camp is not found.
+    """
+    def __init__(self, message="Camp not found"):
+        self.message = message
+        super().__init__(self.message)
+
+class VolunteerNotFound(Exception):
+    """
+    Custom exception for when a volunteer is not found.
+    """
+    def __init__(self, message="Volunteer not found"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class UserNotFound(Exception):
+    """
+    Custom exception for when a user is not found.
+    """
+    def __init__(self, message="User not found"):
+        self.message = message
+        super().__init__(self.message)
+
