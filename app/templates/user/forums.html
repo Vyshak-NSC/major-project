@@ -34,10 +34,10 @@
                 <h2>Ask a Question</h2>
                 <form action="{{ url_for('user.add_thread') }}" method="post" id="question-form">
                     <label for="question-title">Title:</label>
-                    {{ form.title(id='question-title') }}
+                    {{ threadForm.title(id='question-title') }}
 
                     <label for="question-body">Details:</label>
-                    {{ form.content(id='question-body') }}
+                    {{ threadForm.content(id='question-body') }}
 
                     <button type="submit">Submit Question</button>
                 </form>
@@ -64,13 +64,12 @@
             </div>
 
             <!-- Recent Threads Section -->
-<!-- Recent Threads Section -->
-<div class="box threads">
-    <h2>Recent Threads</h2>
-    <div class="threads-container">
-        <ul class="thread-list" id="thread-list"></ul>
-    </div>
-</div>
+            <div class="box threads">
+                <h2>Recent Threads</h2>
+                <div class="threads-container">
+                    <ul class="thread-list" id="thread-list"></ul>
+                </div>
+            </div>
         </section>
     </main>
 

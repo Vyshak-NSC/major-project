@@ -12,6 +12,9 @@ function loadThreads() {
                 const threadItem = document.createElement("li");
                 threadItem.className = "thread-item";
 
+                // Get pre-rendered reply form from the data attribute
+                const replyFormHTML = threadList.dataset.replyform; 
+
                 threadItem.innerHTML = `
                     <div class="thread-header">
                         <span class="thread-title">${thread.title}</span>
@@ -40,19 +43,43 @@ function loadThreads() {
                     <button class="reply-button">Reply</button>
                     
                     <!-- Reply Form (Initially Hidden) -->
-                    <form class="reply-form" style="display: none;">
-                        <label for="reply-text">Your Reply:</label>
-                        <br>
-                        <textarea class="reply-text" placeholder="Type your reply here..." required></textarea>
-                        <br>
-                        <button type="submit">Submit Reply</button>
+                    <form style="display: none;" method="post" class="reply-form">
+                        <label for="reply-content">Reply:</label>
+                        <input type='text' id="reply-content" name="content" required>
+                        <button type="submit-reply">Submit</button>
+                        <input type="hidden" name="thread_id" value="${thread.tid}">
                     </form>
                 `;
 
+                
                 console.log(thread.replies);
                 // Attach event listener to the reply button
                 const replyButton = threadItem.querySelector(".reply-button");
                 const replyForm = threadItem.querySelector(".reply-form");
+                
+                replyButton.addEventListener("click", function () {
+                    replyButton.style.display = "none"; // Hide the button
+                    replyForm.style.display = "block"; // Show the form
+                });
+
+                // Attach event listener to the reply form
+                replyForm.addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    fetch('/user/forums/reply', {
+                        method: 'POST',
+                        body: new FormData(replyForm),
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.error) {
+                        } else {
+                            loadThreads(); // Reload threads to show new reply
+                        }
+                    })
+                });
 
                 const listreplies = threadItem.querySelector(".toggle-replies");
                 const replies = threadItem.querySelector(".replies");
@@ -66,10 +93,7 @@ function loadThreads() {
                 }
                 
 
-                replyButton.addEventListener("click", function () {
-                    replyButton.style.display = "none"; // Hide the button
-                    replyForm.style.display = "block"; // Show the form
-                });
+                
 
                 threadList.appendChild(threadItem);
             });
@@ -103,27 +127,4 @@ function loadReplies(threadId) {
             replySection.appendChild(replyForm);
         })
         .catch(error => console.error("Error loading replies:", error));
-}
-
-function submitReply(event, threadId) {
-    event.preventDefault();
-    const contentField = document.getElementById(`reply-content-${threadId}`);
-    const content = contentField.value.trim();
-
-    if (!content) {
-        alert("Reply cannot be empty!");
-        return;
-    }
-
-    fetch("/user/forums/reply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thread_id: threadId, content })
-    })
-        .then(response => response.json())
-        .then(() => {
-            contentField.value = ""; // Clear textarea after posting
-            loadReplies(threadId); // Refresh replies
-        })
-        .catch(error => console.error("Error submitting reply:", error));
 }

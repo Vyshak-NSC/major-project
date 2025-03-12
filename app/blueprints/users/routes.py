@@ -71,7 +71,7 @@ def forums():
     Display the forums page with all threads.
     """
     threadForm = ThreadForm()
-    return render_template('user/forums.html', form=threadForm)
+    return render_template('user/forums.html', threadForm=threadForm)
 
 @user_bp.route('/forums/threads', methods=['GET'])
 @login_required
@@ -110,19 +110,15 @@ def get_replies(thread_id):
     replies = ForumManager.get_replies_for_thread(thread_id)
     return jsonify(replies)
 
-@user_bp.route('/forum/reply', methods=['POST'])
+@user_bp.route('/forums/reply', methods=['POST'])
 @login_required
 def add_reply():
     """
     Add a reply to a forum thread.
     """
-    data = request.json
-    thread_id = data.get('thread_id')
-    content = data.get('content')
-
-    if not thread_id or not content:
-        return jsonify({"error": "Thread ID and content are required"}), 400
-
+    thread_id = request.form.get('thread_id')
+    content = request.form.get('content')
+    print('\n\n\n\n\n\nval:',thread_id, content)
     result = ForumManager.create_reply(current_user.uid, thread_id, content)
     return jsonify(result), 201
 
