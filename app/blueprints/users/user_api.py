@@ -13,21 +13,6 @@ def get_sensor_data():
         data = load_json.load(file)
     return jsonify(data)
 
-@user_bp.route('/submit_volunteer', methods=['POST', 'GET'])
-def submit_volunteer():
-    form = VolunteerForm(request.form)
-    if form.validate():
-            response, status_code = VolunteerManager.add_volunteer(
-                name=form.name.data,
-                email=form.email.data,
-                mobile=form.mobile.data,
-                location=form.location.data,
-                role_id=form.role_id.data
-            )
-            return response, status_code
-    else:
-        return jsonify({"error": "Invalid form data"}), 400
-
 ################## Camps APIs ##################
 
 @user_bp.route('/get_camp_data/<int:cid>')
@@ -126,6 +111,17 @@ def add_reply():
 
 
 ################## Volunteer APIs ##################
+
+@user_bp.route('/submit_volunteer', methods=['POST', 'GET'])
+def submit_volunteer():
+    response, status_code = VolunteerManager.add_volunteer(
+        name=request.values.get('name'),
+        email=request.values.get('email'),
+        mobile=request.values.get('mobile'),
+        location=request.values.get('location'),
+        role_id=request.values.get('role_id')
+    )
+    return response, status_code
 
 @user_bp.route('/volunteer/get_volunteer_data', methods=['GET'])
 @login_required

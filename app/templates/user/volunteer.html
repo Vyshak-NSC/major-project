@@ -17,7 +17,7 @@
                     Join us in making a difference during disasters. 
                     <span class="typewriter-text"></span> <!-- Typewriter Effect Target -->
              
-                <form action="/user/submit_volunteer" method="post" id="volunteer-form">
+                <form id="volunteer-form">
                     <div class="form-field">
                         <label for="name">Name:</label>
                         <input type="text" name="name" id="name" placeholder="Enter your name" value="{{ user.username }}" required>
@@ -36,7 +36,7 @@
                     </div>
                     <div class="form-field">
                         <label for="role-id">Role ID:</label>
-                        <input type="text" name="role_id" id="role-id" value="" placeholder="Enter Role ID (e.g., R123)" required>
+                        <input type="text" name="role_id" id="role_id" value="" placeholder="Enter Role ID (e.g., R123)" required>
                     </div>
                     <button type="submit" class="btn">Submit Application</button>
                 </form>

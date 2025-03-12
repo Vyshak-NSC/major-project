@@ -212,29 +212,18 @@ class VolunteerManager:
         """
         Add a new volunteer to the database.
         """
-        try:
-            # Validate required fields
-            # if not name or not email or not role_id:
-            #     raise ValueError("Name, email, and role ID are required")
+        # Create a new volunteer
+        new_volunteer = Volunteer(
+            name=name,
+            email=email,
+            mobile=mobile,
+            location=location,
+            role_id=role_id
+        )
+        db.session.add(new_volunteer)
+        db.session.commit()
 
-            # Check if the email is already registered
-            if Volunteer.query.filter_by(email=email).first():
-                raise ValueError("Email already registered")
-
-            # Create a new volunteer
-            new_volunteer = Volunteer(
-                name=name,
-                email=email,
-                mobile=mobile,
-                location=location,
-                role_id=role_id
-            )
-            db.session.add(new_volunteer)
-            db.session.commit()
-
-            return {"message": "Volunteer registered successfully", "volunteer_id": new_volunteer.vid}, 201
-        except Exception as e:
-            return {"error": str(e)}, 500
+        return {"message": "Volunteer registered successfully", "volunteer_id": new_volunteer.vid}, 201
 
     @staticmethod
     def get_volunteer(vid):

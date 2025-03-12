@@ -1,20 +1,22 @@
-// Handle Form Submission
+function submitForm(event){
+    event.preventDefault();
+    volunteerForm = document.getElementById('volunteer-form');
+
+    fetch('/user/submit_volunteer', {
+        method: 'POST',
+        body: new FormData(volunteerForm),
+        headers: { "Accept": "application/json" }
+    })
+
+    .then(response => response.json())
+}
+
+// Attach event listener to volunteer form
 document.getElementById('volunteer-form').addEventListener('submit', function (e) {
-    // e.preventDefault();
-
-    // Get form values
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    const mobile = document.getElementById('mobile').value;
-    const location = document.getElementById('location').value;
-    const role_id = document.getElementById('role_id').value;
-
-    // Display confirmation message
-    // alert(`Thank you, ${name}! Your application for Role ID ${roleId} has been submitted successfully.`);
-
-    // Reset form
-    document.getElementById('volunteer-form').reset();
+    submitForm(e);
 });
+
+
 // Typewriter Text Loop
 const texts = ["Your contribution can save lives !.", "Be the change !."];
 let textIndex = 0; // Tracks the current text
