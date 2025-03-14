@@ -117,7 +117,6 @@ def submit_volunteer():
     """
     Submit volunteer form data.
     """
-    # Expect JSON data from the request body.
     data = request.get_json()
     name = data.get('name')
     email = data.get('email')
@@ -125,8 +124,8 @@ def submit_volunteer():
     location = data.get('location')
     role_id = data.get('role_id')
     
-    # Submit volunteer using the manager.
-    result = VolunteerManager.add_volunteer(name, email, mobile, location, role_id)
+    # Submit volunteer using your manager class
+    result = VolunteerManager.add_volunteer(name, email, mobile, location, role_id, current_user.uid)
     if result:
         return {"status": "success", "message": "Volunteer submitted successfully"}, 201
     return {"status": "error", "errors": "Error submitting volunteer"}, 400

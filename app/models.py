@@ -12,6 +12,9 @@ class User(db.Model, UserMixin):
     location = db.Column(db.String(100))
     mobile = db.Column(db.String(20))
 
+    # One-to-one relationship with Volunteer
+    volunteer = db.relationship('Volunteer', backref='user', uselist=False)
+
     def __repr__(self):
         return f"<User {self.username}>"
     
@@ -55,6 +58,7 @@ class CampNotification(db.Model):
 
 class Volunteer(db.Model):
     vid = db.Column(db.Integer, primary_key=True)  # Volunteer ID
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)
     name = db.Column(db.String(100), nullable=False)  # Name of the volunteer
     email = db.Column(db.String(100), nullable=False)  # Email address
     mobile = db.Column(db.String(20))  # Phone number

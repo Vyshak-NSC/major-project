@@ -208,7 +208,7 @@ class UserManager:
 ################## Volunteer Management Functions ##################
 class VolunteerManager:
     @staticmethod
-    def add_volunteer(name, email, mobile, location, role_id):
+    def add_volunteer(name, email, mobile, location, role_id,user_id):
         """
         Add a new volunteer to the database.
         """
@@ -219,7 +219,8 @@ class VolunteerManager:
                 email=email,
                 mobile=mobile,
                 location=location,
-                role_id=role_id
+                role_id=role_id,
+                user_id=user_id
             )
             db.session.add(new_volunteer)
             db.session.commit()

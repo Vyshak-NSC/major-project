@@ -18,18 +18,23 @@ function submitForm(e) {
         },
         body: JSON.stringify(volunteerData)
     })
-    
     .then(response => response.json())
     .then(data => {
         if (data.status === 'error') {
             alert(data.errors);
         } else {
+            alert(data.message);
             // Clear the form after successful submission
             document.getElementById('volunteer-form').reset();
         }
     })
     .catch(error => console.error("Error submitting volunteer form:", error));
 }
+
+// Attach the submit event listener once the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('volunteer-form').addEventListener('submit', submitForm);
+});
 
 
 // Typewriter Text Loop
