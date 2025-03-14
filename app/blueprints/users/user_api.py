@@ -111,17 +111,25 @@ def add_reply():
 
 
 ################## Volunteer APIs ##################
-
-@user_bp.route('/submit_volunteer', methods=['POST', 'GET'])
+@user_bp.route('/submit_volunteer', methods=['POST'])
+@login_required
 def submit_volunteer():
-    response, status_code = VolunteerManager.add_volunteer(
-        name=request.values.get('name'),
-        email=request.values.get('email'),
-        mobile=request.values.get('mobile'),
-        location=request.values.get('location'),
-        role_id=request.values.get('role_id')
-    )
-    return response, status_code
+    """
+    Submit volunteer form data.
+    """
+    # Expect JSON data from the request body.
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    mobile = data.get('mobile')
+    location = data.get('location')
+    role_id = data.get('role_id')
+    
+    # Submit volunteer using the manager.
+    result = VolunteerManager.add_volunteer(name, email, mobile, location, role_id)
+    if result:
+        return {"status": "success", "message": "Volunteer submitted successfully"}, 201
+    return {"status": "error", "errors": "Error submitting volunteer"}, 400
 
 @user_bp.route('/volunteer/get_volunteer_data', methods=['GET'])
 @login_required

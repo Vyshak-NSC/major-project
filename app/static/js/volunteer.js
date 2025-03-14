@@ -1,20 +1,35 @@
-function submitForm(event){
-    event.preventDefault();
-    volunteerForm = document.getElementById('volunteer-form');
+function submitForm(e) {
+    e.preventDefault();
+    // Get values from the form fields
+    const name = document.getElementById('name').value;
+    const mobile = document.getElementById('mobile').value;
+    const email = document.getElementById('email').value;
+    const location = document.getElementById('location').value;
+    const role_id = document.getElementById('role_id').value;
+    
+    // Create a JSON object with the volunteer form data
+    const volunteerData = { name, mobile, email, location, role_id };
 
+    // Send a POST request with the JSON payload
     fetch('/user/submit_volunteer', {
         method: 'POST',
-        body: new FormData(volunteerForm),
-        headers: { "Accept": "application/json" }
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(volunteerData)
     })
-
+    
     .then(response => response.json())
+    .then(data => {
+        if (data.status === 'error') {
+            alert(data.errors);
+        } else {
+            // Clear the form after successful submission
+            document.getElementById('volunteer-form').reset();
+        }
+    })
+    .catch(error => console.error("Error submitting volunteer form:", error));
 }
-
-// Attach event listener to volunteer form
-document.getElementById('volunteer-form').addEventListener('submit', function (e) {
-    submitForm(e);
-});
 
 
 // Typewriter Text Loop
@@ -61,4 +76,5 @@ function startTypewriter() {
 // Start the typewriter effect on page load
 document.addEventListener('DOMContentLoaded', () => {
     startTypewriter();
+    document.getElementById('volunteer-form').addEventListener('submit', submitForm);
 });
