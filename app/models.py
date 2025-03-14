@@ -73,10 +73,16 @@ class VolunteerHistory(db.Model):
     vid = db.Column(db.Integer, db.ForeignKey('volunteer.vid'), nullable=False)
     camp_id = db.Column(db.Integer, db.ForeignKey('camp.cid'), nullable=False)
     role_id = db.Column(db.Integer, nullable=False)
-    
+    vdate = db.Column(db.DateTime, default=db.func.current_timestamp())
     volunteer = db.relationship('Volunteer', backref='volunteer_history', lazy=True)
     camp = db.relationship('Camp', backref='volunteer_history', lazy=True)
-
+    
+class VolunteerRole(db.Model):
+    role_id = db.Column(db.String, primary_key=True)
+    role = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=False) 
+    
 
 class Thread(db.Model):
     tid = db.Column(db.Integer, primary_key=True, autoincrement=True)

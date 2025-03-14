@@ -130,11 +130,15 @@ def submit_volunteer():
         return {"status": "success", "message": "Volunteer submitted successfully"}, 201
     return {"status": "error", "errors": "Error submitting volunteer"}, 400
 
-@user_bp.route('/volunteer/get_volunteer_data', methods=['GET'])
+@user_bp.route('/volunteer/get_volunteer_history/<int:user_id>', methods=['GET'])
 @login_required
-def get_volunteer_data():
+def get_volunteer_history(user_id):
     """
     Fetch data for a specific volunteer.
     """
-    volunteer_data = VolunteerManager.get_volunteer_history(current_user.uid)
-    return jsonify(volunteer_data)
+    history_records = VolunteerManager.get_volunteer_history(user_id)
+    
+    if not history_records:
+        return jsonify({"status": "error", "message": "Volunteer record not found for this user."}), 404
+    
+    return jsonify({"status": "success", "volunteer_history": history_records}), 200

@@ -78,8 +78,32 @@ function startTypewriter() {
     });
 }
 
+function updateVolunteerHistory(user_id){
+    const url = `/user/volunteer/get_volunteer_history/${user_id}`;
+    const historyList = document.getElementById('history-list');
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === 'success'){
+            const history = data.volunteer_history;
+            historyList.innerHTML = '';
+            history.forEach(volunteer => {
+                const li = document.createElement('li');
+                li.textContent = `You volunteered as ${volunteer.role} at Camp : ${volunteer.camp_name}, ${volunteer.location} on ${volunteer.vdate}`;
+                historyList.appendChild(li);
+            });
+        }
+    })    
+
+}
+
+
 // Start the typewriter effect on page load
 document.addEventListener('DOMContentLoaded', () => {
     startTypewriter();
     document.getElementById('volunteer-form').addEventListener('submit', submitForm);
+    container = document.getElementById('history-list');
+    const user_id = container.getAttribute('data-user_id');
+    
+    updateVolunteerHistory(user_id);
 });

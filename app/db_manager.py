@@ -1,6 +1,5 @@
 from werkzeug.security import generate_password_hash
-from .models import Camp, Volunteer, User, VolunteerHistory, db
-from .models import Thread, Reply
+from .models import Camp, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
 
 ################## Camps Management Functions ##################
 class CampManager:
@@ -293,21 +292,30 @@ class VolunteerManager:
         ]
     
     @staticmethod
-    def get_volunteer_history():
+    def get_volunteer_history(user_id):
         """
         Retrieve a list of all volunteers.
         """
-        volunteers = VolunteerHistory.query.all()
-        return [
-            {
-                "vhid": volunteer.vhid,
-                "vid": volunteer.vid,
-                "camp_id": volunteer.camp_id,
-                "role_id": volunteer.role_id
-            }
-            for volunteer in volunteers
-        ]
-
+        volunteer = Volunteer.query.filter_by(user_id=user_id).first()
+        if not volunteer:
+            return None
+        # Retrieve all history records for the found volunteer.
+        data = VolunteerHistory.query.filter_by(vid=volunteer.vid).all()
+        history = []
+        for record in data:
+            vol_role = VolunteerRole.query.get(record.role_id)
+            print('\n\n\n\nrole',record.role_id, vol_role)
+            history.append(
+                {
+                    "vhid": record.vhid,
+                    "vid": record.vid,
+                    "camp_name": Camp.query.get(record.camp_id).camp_name,
+                    'location' : 'location',
+                    # "role": vol_role.role,
+                    "vdate": record.vdate.strftime("%Y-%m-%d %H:%M:%S")
+                }
+            )
+        return history
 
 ################## Forum Management Functions ##################
 class ForumManager:
