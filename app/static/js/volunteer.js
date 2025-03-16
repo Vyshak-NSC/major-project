@@ -86,6 +86,7 @@ function updateVolunteerHistory(user_id){
     .then(data => {
         if(data.status === 'success'){
             const history = data.volunteer_history;
+            console.log("\n\n\n\n\n\nHistory", history);
             historyList.innerHTML = '';
             history.forEach(volunteer => {
                 const li = document.createElement('li');

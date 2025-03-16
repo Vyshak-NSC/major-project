@@ -309,7 +309,7 @@ class VolunteerManager:
                     "vhid": record.vhid,
                     "vid": record.vid,
                     "camp_name": Camp.query.get(record.camp_id).camp_name,
-                    'location' : 'location',
+                    'location' : vol_role.location,
                     "role": vol_role.role,
                     "vdate": record.vdate.strftime("%Y-%m-%d %H:%M:%S")
                 }
