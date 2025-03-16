@@ -7,10 +7,9 @@ from flask_login import current_user, login_required
 from app.db_manager import CampManager, ForumManager, VolunteerManager
 
 @user_bp.route('/get_sensor_data')
-@login_required
 def get_sensor_data():
     with open('app/static/sensor_data.json') as file:
-        data = load_json.load(file)
+        data = load_json(file)
     return jsonify(data)
 
 ################## Camps APIs ##################
