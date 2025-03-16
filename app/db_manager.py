@@ -304,14 +304,13 @@ class VolunteerManager:
         history = []
         for record in data:
             vol_role = VolunteerRole.query.get(record.role_id)
-            print('\n\n\n\nrole',record.role_id, vol_role)
             history.append(
                 {
                     "vhid": record.vhid,
                     "vid": record.vid,
                     "camp_name": Camp.query.get(record.camp_id).camp_name,
                     'location' : 'location',
-                    # "role": vol_role.role,
+                    "role": vol_role.role,
                     "vdate": record.vdate.strftime("%Y-%m-%d %H:%M:%S")
                 }
             )
