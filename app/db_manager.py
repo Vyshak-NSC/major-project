@@ -1,5 +1,5 @@
 from werkzeug.security import generate_password_hash
-from .models import Camp, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
+from .models import Camp, Donation, DonationAmount, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
 
 ################## Camps Management Functions ##################
 class CampManager:
@@ -403,6 +403,117 @@ class ForumManager:
         ]
 
 
+################## Donation Management Functions ##################
+class DonationManager:
+    @staticmethod
+    def add_donation(user_id, items=None):
+        """
+        Add a new donation to the database.
+        """
+        new_donation = Donation(user_id=user_id, items=items)
+        db.session.add(new_donation)
+        db.session.commit()
+        return {"message": "Donation added successfully", "donation_id": new_donation.did}
+    
+    @staticmethod
+    def get_donation(did):
+        """
+        Retrieve a donation's details by its ID.
+        """
+        donation = Donation.query.get(did)
+        if donation:
+            return {
+                "did": donation.did,
+                "user_id": donation.user_id,
+                "timestamp": donation.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "items": donation.items
+            }
+        raise DonationNotFound(f"Donation with ID {did} not found.")
+
+    @staticmethod
+    def update_donation(did, **kwargs):
+        """
+        Update a donation's details. Pass keyword arguments for fields to update.
+        Example: update_donation(did, amount=500, items={"food": 10, "water": 20})
+        """
+        donation = Donation.query.get(did)
+        if donation:
+            for key, value in kwargs.items():
+                if hasattr(donation, key):
+                    setattr(donation, key, value)
+            db.session.commit()
+            return donation
+        return None
+
+    @staticmethod
+    def delete_donation(did):
+        """
+        Delete a donation by its ID.
+        """
+        donation = Donation.query.get(did)
+        if donation:
+            db.session.delete(donation)
+            db.session.commit()
+            return True
+        return False
+
+    @staticmethod
+    def list_all_donations():
+        """
+        Retrieve a list of all donations.
+        """
+        donations = Donation.query.all()
+        return [
+            {
+                "did": donation.did,
+                "user_id": donation.user_id,
+                "timestamp": donation.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "items": donation.items
+            }
+            for donation in donations
+        ]
+    
+    # add donation amount to donationamount
+    @staticmethod
+    def add_donation_amount(user_id, amount):
+        """
+        Add a new donation amount to the database.
+        """
+        new_donation_amount = DonationAmount(user_id=user_id, amount=amount)
+        db.session.add(new_donation_amount)
+        db.session.commit()
+        return {"message": "Donation amount added successfully", "donation_amount_id": new_donation_amount.daid}
+
+    # get donation by user id
+    @staticmethod
+    def get_donation_by_user(user_id):
+        """
+        Retrieve a list of all donations by a user.
+        """
+        donations = Donation.query.filter_by(user_id=user_id).all()
+        
+        result = []
+        for donation in donations:
+            for item in donation.items:
+                name = item.get('name')
+                quantity = item.get('quantity')
+                result.append([name,quantity])
+        
+        return result
+            
+
+    # get donation amount by user id
+    @staticmethod
+    def get_donation_amount_by_user(user_id):
+        """
+        Retrieve a donation amount by user id.
+        """
+        donation_amount = DonationAmount.query.filter_by(user_id=user_id).first()
+        if donation_amount:
+            return donation_amount.amount
+        
+
+
 ################## Custom Exceptions ##################
 
 class CampNotFound(Exception):
@@ -430,3 +541,10 @@ class UserNotFound(Exception):
         self.message = message
         super().__init__(self.message)
 
+class DonationNotFound(Exception):
+    """
+    Custom exception for when a donation is not found.
+    """
+    def __init__(self, message="Donation not found"):
+        self.message = message
+        super().__init__(self.message)

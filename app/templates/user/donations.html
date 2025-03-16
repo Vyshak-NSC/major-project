@@ -26,8 +26,8 @@
                 <div class="pie-chart">
                     <canvas id="myChart" width="200" height="200"></canvas>
                     <div class="chart-labels">
-                        <div class="label">Collected: 5000</div>
-                        <div class="label">Goal: 10,000</div>
+                        <div class="label" id="amount-donated">Amount Donated: ₹0</div>
+                        <div class="label" id="items-donated">Items Donated: None</div>
                     </div>
                 </div>
             </div>
@@ -48,11 +48,11 @@
         <span class="close-btn">&times;</span>
         <h2>Essential Form</h2>
         <form id="essential-form">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
+            <!-- <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ current_user.username}}" required>
 
             <label for="phone">Phone Number:</label>
-            <input type="tel" id="phone" name="phone" required>
+            <input type="tel" id="phone" name="phone" value="{{ current_user.mobile if current_user.mobile else '' }}" required> -->
 
             <!-- Container for multiple items -->
             <div id="items-container">
@@ -65,7 +65,7 @@
 
                     <label for="condition">Condition:</label>
                     <select class="item-condition" name="condition[]">
-                        <option value="new">New</option>
+                        <option value="new">Unused</option>
                         <option value="used">Used (Good)</option>
                         <option value="used-fair">Used (Fair)</option>
                     </select>
@@ -76,7 +76,7 @@
             <button type="button" id="add-item-btn">Add Another Item</button><br><br>
 
             <label for="location">Address (for pickup):</label><br>
-            <input type="text" id="address" name="address" required><br><br>
+            <input type="text" id="address" name="address" value="{{ current_user.address if current_user.address else '' }}" required><br><br>
 
             <button type="submit">Submit donation</button>
         </form>

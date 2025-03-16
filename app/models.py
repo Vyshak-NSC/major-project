@@ -11,7 +11,9 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(20), nullable=False, default='user')  # user, admin, local_auth
     location = db.Column(db.String(100))
     mobile = db.Column(db.String(20))
-
+    donation = db.relationship("Donation", back_populates="user", lazy=True)
+    donation_amount = db.relationship("DonationAmount", backref="user", lazy=True)
+    
     # One-to-one relationship with Volunteer
     volunteer = db.relationship('Volunteer', backref='user', uselist=False)
 
@@ -106,3 +108,35 @@ class Feedback(db.Model):
     name=db.Column(db.String(100), nullable=False)
     email=db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(500), nullable=False)
+
+class Donation(db.Model):
+    did = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Unique donation ID
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), nullable=False)  # User who made the donation
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)  # Timestamp of donation
+    items = db.Column(db.JSON, nullable=True)  # Dictionary of donated items (nullable)
+
+    # Relationship to the User model (assuming you have a User model)
+    user = db.relationship("User", back_populates="donation")
+
+    def __init__(self, user_id, amount=None, items=None):
+        """
+        Initialize a new donation.
+        :param user_id: ID of the user making the donation.
+        :param amount: Monetary donation amount (optional).
+        :param items: Dictionary of donated items (optional).
+        """
+        if amount is None and items is None:
+            raise ValueError("Either 'amount' or 'items' must be provided.")
+        
+        self.user_id = user_id
+        self.amount = amount
+        self.items = items
+
+    def __repr__(self):
+        return f"<Donation(did={self.did}, user_id={self.user_id}, amount={self.amount}, items={self.items})>"
+    
+class DonationAmount(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
+    amount_id = db.Column(db.Integer, primary_key=True)
+    amount = db.Column(db.Float, nullable=False)
+    
