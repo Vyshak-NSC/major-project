@@ -16,37 +16,38 @@ function initializePage() {
 
 // Set up the Donation and Relief Camps charts
 function setupCharts() {
-    setupDonationChart();
+    // Commenting out the Donation Pie Chart setup
+    // setupDonationChart();
     setupReliefCampChart();
 }
 
-// Set up the Donation Pie Chart
-function setupDonationChart() {
-    const donationCtx = document.getElementById("myChart").getContext("2d");
-    new Chart(donationCtx, {
-        type: "doughnut",
-        data: {
-            labels: ["Donated", "Spent"],
-            datasets: [{
-                data: [0, 0],
-                backgroundColor: ["#007bff", "#ff6384"],
-            }],
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                tooltip: {
-                    enabled: true,
-                    callbacks: {
-                        label: function (context) {
-                            return `${context.label}: ${context.raw}Rs`;
-                        },
-                    },
-                },
-            },
-        },
-    });
-}
+// Commenting out the Donation Pie Chart setup
+// function setupDonationChart() {
+//     const donationCtx = document.getElementById("myChart").getContext("2d");
+//     new Chart(donationCtx, {
+//         type: "doughnut",
+//         data: {
+//             labels: ["Donated", "Spent"],
+//             datasets: [{
+//                 data: [0, 0],
+//                 backgroundColor: ["#007bff", "#ff6384"],
+//             }],
+//         },
+//         options: {
+//             responsive: true,
+//             plugins: {
+//                 tooltip: {
+//                     enabled: true,
+//                     callbacks: {
+//                         label: function (context) {
+//                             return `${context.label}: ${context.raw}Rs`;
+//                         },
+//                     },
+//                 },
+//             },
+//         },
+//     });
+// }
 
 // Set up the Relief Camps Chart
 function setupReliefCampChart() {
@@ -54,12 +55,12 @@ function setupReliefCampChart() {
     new Chart(campCtx, {
         type: "doughnut",
         data: {
-            labels: ["Capacity", "Food Supply", "Water Supply"],
+            labels: ["Food Supply", "Water Supply"],
             datasets: [{
-                label: "Relief Camp Data",
-                data: [120, 120, 120],
-                backgroundColor: ["#007bff", "#28a745", "#ffc107"],
-                hoverBackgroundColor: ["#005bb5", "#218838", "#e0a800"],
+                label: "Relief Camp Inventory",
+                data: [0, 0], // Initial data
+                backgroundColor: ["#28a745", "#ffc107"],
+                hoverBackgroundColor: ["#218838", "#e0a800"],
                 borderWidth: 0,
             }],
         },
@@ -75,7 +76,7 @@ function setupReliefCampChart() {
                     enabled: true,
                     callbacks: {
                         label: function (context) {
-                            const labels = ["people", "meals", "liters"];
+                            const labels = ["meals", "liters"];
                             return `${context.label}: ${context.raw} ${labels[context.dataIndex]}`;
                         },
                     },
@@ -212,7 +213,8 @@ function updateCampDetailsAndChart(camp) {
     clearNotificationInterval();
     updateCampDetailsUI(camp);
     updateReliefCampChart(camp);
-    updateDonationChart(camp);
+    // Commenting out the Donation Chart update
+    // updateDonationChart(camp);
     fetchAndDisplayNotifications(camp.cid);
     startNotificationRefresh(camp.cid);
 }
@@ -227,7 +229,6 @@ function clearNotificationInterval() {
 // Update camp details in the UI
 function updateCampDetailsUI(camp) {
     document.getElementById("camp-capacity").textContent = `${camp.num_people_present}/${camp.capacity}`;
-    document.getElementById("available-people").textContent = `${camp.num_people_present}`;
     document.getElementById("food-supply").textContent = `${camp.food_stock_quota} Meals`;
     document.getElementById("water-supply").textContent = `${camp.water_stock_litres} Litres`;
     document.getElementById("camp-location").textContent = `${camp.location}`;
@@ -238,7 +239,6 @@ function updateReliefCampChart(camp) {
     const campChart = Chart.getChart("campChart"); // Get the existing chart instance
     if (campChart) {
         campChart.data.datasets[0].data = [
-            camp.capacity,
             camp.food_stock_quota,
             camp.water_stock_litres
         ];
@@ -249,20 +249,20 @@ function updateReliefCampChart(camp) {
     }
 }
 
-// Update the Donation Chart
-function updateDonationChart(camp) {
-    const donationChart = Chart.getChart("myChart"); // Get the existing chart instance
-    if (donationChart) {
-        donationChart.data.datasets[0].data = [
-            camp.donations_received,
-            camp.donations_spent
-        ];
-        donationChart.update();
-        console.log("Donation chart updated");
-    } else {
-        console.error("Donation chart not initialized");
-    }
-}
+// Commenting out the Donation Chart update
+// function updateDonationChart(camp) {
+//     const donationChart = Chart.getChart("myChart"); // Get the existing chart instance
+//     if (donationChart) {
+//         donationChart.data.datasets[0].data = [
+//             camp.donations_received,
+//             camp.donations_spent
+//         ];
+//         donationChart.update();
+//         console.log("Donation chart updated");
+//     } else {
+//         console.error("Donation chart not initialized");
+//     }
+// }
 
 // Fetch and display notifications for a specific camp
 async function fetchAndDisplayNotifications(camp_id) {
