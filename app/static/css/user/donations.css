@@ -98,14 +98,15 @@
     transform: scale(1.05); /* Slight zoom effect on hover */
 }
 .chart-labels {
-    position: absolute;
+    /* position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); */
     color: #f0f0f0;
     font-weight: 600;
     font-size: clamp(2.5vh, 3vw, 3vh); /* Responsive font size */
     transition: color 0.3s ease;
+    width: 90%;
     
 }
 .chart-labels:hover {
