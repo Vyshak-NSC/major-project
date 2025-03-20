@@ -98,28 +98,38 @@
     transform: scale(1.05); /* Slight zoom effect on hover */
 }
 .chart-labels {
-    /* position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); */
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal overflow */
     color: #f0f0f0;
     font-weight: 600;
+    line-height: 1rem;
     font-size: clamp(2.5vh, 3vw, 3vh); /* Responsive font size */
     transition: color 0.3s ease;
     width: 90%;
-    
+    max-height: 100px; /* Prevent labels from exceeding the container height */
+    word-wrap: break-word; /* Break long words */
+    padding: 1%; /* Add padding for better spacing */
 }
-.chart-labels:hover {
-    color: #ffdd57; /* Brighten labels on hover */
+
+.chart-labels::-webkit-scrollbar {
+    width: 8px; /* Set scrollbar width */
 }
+
+.chart-labels::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3); /* Scrollbar thumb color */
+    border-radius: 4px; /* Rounded scrollbar */
+}
+
+.chart-labels::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5); /* Hover effect for scrollbar */
+}
+
 .label {
-    text-align: center;
+    text-align: left;   
     font-size: clamp(1.5vh, 2vw, 2vh); /* Responsive font size */
     transition: transform 0.3s ease;
 }
-.label:hover {
-    transform: translateX(10px); /* Slide effect on hover */
-}
+
 
 /* Bottom Row (Essentials Box) */
 .bottom-row {

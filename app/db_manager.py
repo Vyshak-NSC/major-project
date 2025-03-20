@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from werkzeug.security import generate_password_hash
 from .models import Camp, Donation, DonationAmount, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
 
@@ -512,7 +513,32 @@ class DonationManager:
         if donation_amount:
             return donation_amount.amount
         
+    @staticmethod
+    def get_total_donated_amount():
+        amount = db.session.query(func.sum(DonationAmount.amount)).scalar()
+        return amount
 
+    @staticmethod
+    def get_total_donated_items():
+        """
+        Retrieve the total items donated, grouped by their unique names and quantities.
+        """
+        donations = Donation.query.all()  # Fetch all donations
+        item_summary = {}
+
+        # Iterate through all donations and aggregate item quantities
+        for donation in donations:
+            if donation.items:  # Ensure the donation has items
+                for item in donation.items:
+                    name = item.get('name')
+                    quantity = int(item.get('quantity', 0))  # Default quantity to 0 if not provided
+                    if name in item_summary:
+                        item_summary[name] += quantity
+                    else:
+                        item_summary[name] = quantity
+
+        return item_summary
+    
 
 ################## Custom Exceptions ##################
 

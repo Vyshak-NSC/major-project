@@ -228,14 +228,14 @@
 }
 
 .camp-graph {
-    margin-top: 1%; /* Percentage margin */
+    /* margin-top: 1%; */
     position: absolute;
-    width: 60%; /* Make graph responsive */
-    height: 66%;
+    /* width: 60%;
+    height: 66%; */
     max-height: 75vh;
     overflow: hidden;
-    margin-bottom: 2%;
-    margin-left: 0%;
+    /* margin-bottom: 2%; */
+    margin-left: 10%;
 }
 
 .next-camp-btn {
@@ -248,7 +248,7 @@
     cursor: pointer;
     transition: background 0.3s ease;
     font-size: 0.9vw; /* vw for button size */
-    z-index: 10;
+    z-index: 10 ;
 }
 
 .next-camp-btn:hover {

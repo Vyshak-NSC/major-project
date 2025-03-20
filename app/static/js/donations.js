@@ -149,7 +149,7 @@ function renderDonationChart(itemSummary) {
 
 // Fetch and display donation summary
 function fetchDonationSummary() {
-    fetch('/user/donation-summary')
+    fetch('/user/user-donation-summary')
         .then(response => response.json())
         .then(data => {
             if (data) {
@@ -164,7 +164,7 @@ function fetchDonationSummary() {
 
                 renderDonationChart(itemSummary);
 
-                document.getElementById('amount-donated').textContent = `Amount Donated: ₹${amountDonated}`;
+                document.getElementById('amount-donated').textContent = amountDonated ? `Amount Donated: ₹${amountDonated}` : 'Amount Donated: None';
                 document.getElementById('items-donated').innerHTML = Object.keys(itemSummary).length > 0
                     ? `Items Donated: ${Object.entries(itemSummary).map(([label, quantity]) => `<br>${label}: ${quantity} units`).join(", ")}`
                     : "Items Donated: None";

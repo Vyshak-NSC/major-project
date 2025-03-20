@@ -236,10 +236,19 @@ def payment_success():
         # Payment verification failed
         return jsonify({"success": False, "error": "Payment verification failed"}), 400
 
-@user_bp.route('/donation-summary', methods=['GET'])
+@user_bp.route('/user-donation-summary', methods=['GET'])
 @login_required
-def get_donation_summary():
+def get_user_donation_summary():
     amount_donated = DonationManager.get_donation_amount_by_user(current_user.uid)
     items_donated = DonationManager.get_donation_by_user(current_user.uid)
 
+    return jsonify({"amount_donated": amount_donated, "items_donated": items_donated})
+
+# get overall donations funtion
+@user_bp.route('/donation-summary')
+@login_required
+def get_donation_summary():
+    amount_donated = DonationManager.get_total_donated_amount()  # Fetch total donation amount from the database
+    items_donated = DonationManager.get_total_donated_items()
+    
     return jsonify({"amount_donated": amount_donated, "items_donated": items_donated})
