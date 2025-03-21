@@ -234,12 +234,28 @@ async function fetchDonationSummary() {
         const response = await fetch("/user/donation-summary");
         if (!response.ok) throw new Error("Failed to fetch donation summary");
 
-        const { items } = await response.json();
+        const data = await response.json();
+        const itemsDonated = data.items_donated || {}; // Expecting an object
+        const amountDonated = data.amount_donated || 0;
+
+        // Extract keys (labels) and values (data) from the object
+        const labels = Object.keys(itemsDonated).map(key => 
+            key.charAt(0).toUpperCase() + key.slice(1) // Capitalize first letter
+        );
+        const dataValues = Object.values(itemsDonated);
+
+        // Update the donation chart
         const donationChart = Chart.getChart("myChart");
         if (donationChart) {
-            donationChart.data.labels = items.map(item => item.name);
-            donationChart.data.datasets[0].data = items.map(item => item.amount);
+            donationChart.data.labels = labels;
+            donationChart.data.datasets[0].data = dataValues;
             donationChart.update();
+        }
+
+        // Display total donation amount below the chart
+        const totalDonationElement = document.getElementById("total-donation");
+        if (totalDonationElement) {
+            totalDonationElement.textContent = `Total Amount Donated: ₹${amountDonated}`;
         }
     } catch (error) {
         console.error("Error fetching donation summary:", error);
