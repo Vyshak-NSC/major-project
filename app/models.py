@@ -139,3 +139,4 @@ class DonationAmount(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
     amount_id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
+    

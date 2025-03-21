@@ -155,11 +155,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     searchResultContainer.textContent = "No people found in this camp.";
                     return;
                 }
-        
+ 
                 const matchingPeople = people.filter(person =>
                     person.name.toLowerCase().includes(searchInput)
                 );
-        
+                
                 if (matchingPeople.length === 0) {
                     searchResultContainer.textContent = "No matching records found.";
                 } else {
@@ -212,26 +212,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+
+
+
+    // Show/hide request form popup
+    const requestSlotBtn = document.getElementById('request-slot-btn');
+    const requestFormPopup = document.getElementById('request-form-popup');
+    const closeBtn = document.querySelector('.close-btn');
+
+    requestSlotBtn.addEventListener('click', () => {
+        requestFormPopup.style.display = 'flex';
+    });
+
+    closeBtn.addEventListener('click', () => {
+        requestFormPopup.style.display = 'none';
+    });
+
+    // Close popup when clicking outside the content
+    window.addEventListener('click', (event) => {
+        if (event.target === requestFormPopup) {
+            requestFormPopup.style.display = 'none';
+        }
+    });
+
     // Fetch Camps on Page Load
     fetchCamps();
 });
 
 
-
-
-//  reueest supplies function
-// document.getElementById("request-btn").addEventListener("click", () => {
-//     const currentCamp = camps[currentCampIndex];
-//     const supplies = prompt(
-//         `Enter supplies needed for Camp ${currentCamp.id} (${currentCamp.location}) in the format:\nfood,water,clothes,essentials\n(e.g., 500,2000,100,50)`
-//     );
-
-//     if (supplies) {
-//         const [food, water, clothes, essentials] = supplies.split(",").map(Number);
-//         alert(
-//             `Request Submitted:\nCamp ID: ${currentCamp.id}\nLocation: ${currentCamp.location}\nSupplies Requested:\n- Food: ${food} meals\n- Water: ${water} liters\n- Clothes: ${clothes} units\n- Essentials: ${essentials} units`
-//         );
-//     } else {
-//         alert("No supplies requested.");
-//     }
-// });

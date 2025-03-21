@@ -196,7 +196,7 @@ def save_sensor_data_to_json(sensors):
     """
     Save sensor data to a JSON file.
     """
-    with open("./static/sensor_data.json", "w") as file:
+    with open("sensor_data.json", "w") as file:
         json.dump(sensors, file, indent=4)
     print("Sensor data saved to sensor_data.json")
 
