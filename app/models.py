@@ -44,7 +44,7 @@ class Camp(db.Model):
     food_stock_quota = db.Column(db.Integer, default=0)
     water_stock_litres = db.Column(db.Integer, default=0)
     contact_number = db.Column(db.String(20))
-    people_list = db.Column(db.PickleType, default=[])
+    people_list = db.Column(db.JSON, default=[])  # Changed to JSON for better structure and querying
     donations_received = db.Column(db.Float, default=0.0)
     donations_spent = db.Column(db.Float, default=0.0)
     
@@ -139,4 +139,3 @@ class DonationAmount(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.uid'), primary_key=True)
     amount_id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
-    

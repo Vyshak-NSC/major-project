@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for
 from flask_login import login_required
 
-from app.models import User
+from app.models import Camp, User
 from .config import Config
 
 from .extensions import db, migrate, login_manager, bcrypt

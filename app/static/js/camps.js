@@ -139,16 +139,42 @@ document.addEventListener("DOMContentLoaded", () => {
             updateCampDetails();
         });
 
-
-        document.getElementById("search-btn").addEventListener("click", () => {
+        document.getElementById("search-btn").addEventListener("click", async () => {
             const searchInput = document.getElementById("search-input").value.trim().toLowerCase();
             const currentCamp = camps[currentCampIndex];
-            const result = currentCamp.people.find(person => person.toLowerCase() === searchInput);
-
-            const searchResult = document.getElementById("search-result");
-            searchResult.textContent = result 
-                ? `${result} is currently registered at Camp ${currentCamp.id} (${currentCamp.location}).`
-                : "No matching records found.";
+            const searchResultContainer = document.getElementById("search-result");
+        
+            try {
+                const response = await fetch(`/user/people-list/${currentCamp.cid}`);
+                if (!response.ok) throw new Error("Failed to fetch people list");
+        
+                const people = await response.json();
+                searchResultContainer.innerHTML = ""; // Clear previous results
+        
+                if (!Array.isArray(people) || people.length === 0) {
+                    searchResultContainer.textContent = "No people found in this camp.";
+                    return;
+                }
+        
+                const matchingPeople = people.filter(person =>
+                    person.name.toLowerCase().includes(searchInput)
+                );
+        
+                if (matchingPeople.length === 0) {
+                    searchResultContainer.textContent = "No matching records found.";
+                } else {
+                    const list = document.createElement("ul");
+                    matchingPeople.forEach(person => {
+                        const listItem = document.createElement("li");
+                        listItem.textContent = `${person.name} (UID: ${person.uid})`;
+                        list.appendChild(listItem);
+                    });
+                    searchResultContainer.appendChild(list);
+                }
+            } catch (error) {
+                console.error("Error fetching people list:", error);
+                searchResultContainer.textContent = "Error fetching people list.";
+            }
         });
     }
 

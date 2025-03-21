@@ -32,7 +32,7 @@ def get_camp_data(cid):
     return jsonify({"error": "Camp not found"}), 404
 
 
-@user_bp.route('/list_all_camps', methods=['GET', 'POST'])
+@user_bp.route('/list_all_camps', methods=['GET'])
 @login_required
 def list_all_camps():
     """
@@ -40,7 +40,6 @@ def list_all_camps():
     """
     camps = CampManager.list_all_camps()
     return jsonify(camps)
-
 
 @user_bp.route('/camp_notification/<int:camp_id>', methods=['GET'])
 def get_announcements(camp_id):
@@ -61,8 +60,47 @@ def get_announcements(camp_id):
 
     return jsonify(announcements_list)
 
+@user_bp.route('/people-list/<int:camp_id>', methods=['GET'])
+@login_required
+def get_people_list(camp_id):
+    """
+    Fetch the list of people in a specific camp.
+    """
+    camp = Camp.query.get(camp_id)
 
+    if not camp:
+        return jsonify({"error": "Camp not found"}), 404
 
+    # Convert the camp object to a JSON-serializable format
+    people_list = camp.people_list or []
+    return jsonify(people_list),201
+
+@user_bp.route('/add_person_to_camp/<int:camp_id>', methods=['POST'])
+@login_required
+def add_person_to_camp(camp_id):
+    """
+    Add a person to the camp's people_list.
+    """
+    camp = Camp.query.get(camp_id)
+    if not camp:
+        return jsonify({"error": "Camp not found"}), 404
+
+    data = request.get_json()
+    user_id = data.get('uid')
+    name = data.get('name')
+
+    if not user_id or not name:
+        return jsonify({"error": "Invalid data. 'uid' and 'name' are required."}), 400
+
+    # Add the person to the camp's people_list
+    if not camp.people_list:
+        camp.people_list = []
+    camp.people_list.append({'uid': user_id, 'name': name})
+
+    # Save changes to the database
+    CampManager.update_camp(camp)
+
+    return jsonify({"status": "success", "message": "Person added to camp successfully"}), 200
 
 ################## Forum APIs ##################
 
