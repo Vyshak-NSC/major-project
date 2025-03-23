@@ -20,60 +20,74 @@ def get_all_users():
         return jsonify({"error": str(e)}), 500
 
 
+@admin_bp.route('/get_user/<int:user_id>')
+@login_required
+def get_user(user_id):
+    """
+    List all users.
+    """
+    try:
+        users = UserManager.get_user(user_id)
+        return jsonify(users), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @admin_bp.route('/get_user_activity/<int:uid>')
 def user_activity(uid):
     data = get_user_activity(uid)
     
     return jsonify(data)
 
-@admin_bp.route("/add_users", methods=["POST"])
+@admin_bp.route("/add_user", methods=["POST"])
 def add_user():
     try:
         data = request.json
         username = data.get("username")
         email = data.get("email")
+        password = data.get("password")
         location = data.get("location")
         mobile = data.get("mobile")
         role = data.get("role")
         associated_camp_id = data.get("associated_camp_id")
 
-        if not all([username, email, role]):  
-            return jsonify({"error": "Username, email, and role are required"}), 400
+        if not all([username, email, password, role]):  
+            return jsonify({"error": "Username, email, password, and role are required"}), 400
         
-        user = UserManager.add_user(username, email, location, mobile, role, associated_camp_id)
-        return jsonify({
-            "uid": user.uid,
-            "username": user.username,
-            "email": user.email,
-            "location": user.location,
-            "mobile": user.mobile,
-            "role": user.role,
-            "associated_camp_id": user.associated_camp_id
-        }), 201  # Return created user with status 201
+        response, status_code = UserManager.create_user(username, email, password, location, mobile, role, associated_camp_id)
+
+        return jsonify(response), status_code  # Return the correct response and status code
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-
-@admin_bp.route('/edit_user/<int:uid>', methods=['POST'])
+    
+@admin_bp.route('/update_user/<int:uid>', methods=['PUT'])
 @login_required
-def edit_user(uid):
+def update_user(uid):
     """
     Edit user details.
     """
     try:
         data = request.get_json()
-        update_data = {key: value for key, value in data.items() if value}
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
 
+        # Remove empty fields
+        update_data = {key: value for key, value in data.items() if value is not None}
+
+        # Check if email is already in use
         if 'email' in update_data:
             existing_user = User.query.filter_by(email=update_data['email']).first()
             if existing_user and existing_user.uid != uid:
                 return jsonify({'error': 'Email already in use'}), 400
 
-        updated_user = UserManager.update_user(uid, **update_data)
-        return jsonify({'message': 'User updated successfully', 'user': updated_user}), 200
+        # Update user
+        updated_user, status_code = UserManager.update_user(uid, **update_data)
+        return jsonify({'message': 'User updated successfully', 'user': updated_user}), status_code
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @admin_bp.route('/delete_user/<int:uid>', methods=['DELETE'])
 @login_required

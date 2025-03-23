@@ -130,7 +130,7 @@ class CampManager:
 ################## User Management Functions ##################
 class UserManager:
     @staticmethod
-    def add_user(username, email, password, location=None, mobile=None, role="user", associated_camp_id=None):
+    def create_user(username, email, password, location=None, mobile=None, role="user", associated_camp_id=None):
         """
         Add a new user to the database.
         """
@@ -138,8 +138,6 @@ class UserManager:
             # Check if the email is already registered
             if User.query.filter_by(email=email).first():
                 raise ValueError("Email already registered")
-
-            hashed_password = generate_password_hash(password)
 
             # Create a new user
             new_user = User(
@@ -150,11 +148,19 @@ class UserManager:
                 role=role,
                 associated_camp_id=associated_camp_id
             )
-            new_user.set_password(password)
+            new_user.set_password(password)  # Hash password
             
             db.session.add(new_user)
             db.session.commit()
-            return {"message": "User added successfully", "user_id": new_user.uid}, 201
+            return {
+                "uid": new_user.uid,
+                "username": new_user.username,
+                "email": new_user.email,
+                "location": new_user.location,
+                "mobile": new_user.mobile,
+                "role": new_user.role,
+                "associated_camp_id": new_user.associated_camp_id
+            }, 201  # Return a dictionary with user data
 
         except Exception as e:
             db.session.rollback()
@@ -185,15 +191,32 @@ class UserManager:
         Example: update_user(uid, username="new_username", email="new_email@example.com")
         """
         user = User.query.get(uid)
-        if user:
+        if not user:
+            return {"error": "User not found"}, 404  # Return error if user does not exist
+
+        try:
             for key, value in kwargs.items():
                 if key == "password":
                     user.set_password(value)  # Hash password if updating
                 elif hasattr(user, key):
                     setattr(user, key, value)
+
             db.session.commit()
-            return user
-        return None
+            
+            # Convert user to dictionary to return as JSON
+            return {
+                "uid": user.uid,
+                "username": user.username,
+                "email": user.email,
+                "location": user.location,
+                "mobile": user.mobile,
+                "role": user.role,
+                "associated_camp_id": user.associated_camp_id
+            }, 200  # Return the updated user details
+
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}, 500
 
     @staticmethod
     def delete_user(uid):
