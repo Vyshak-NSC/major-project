@@ -1,26 +1,49 @@
+from datetime import datetime
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash
-from .models import Camp, Donation, DonationAmount, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
+from .models import Camp, CampNotification, Donation, DonationAmount, UserActivity, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
+
+
+def get_table_count():
+    list = {
+        'users':User.query.count(),
+        'camps':Camp.query.count(),
+        'warehouses':0,
+        'sensors':0
+    }
+    return list
 
 ################## Camps Management Functions ##################
 class CampManager:
     @staticmethod
-    def create_camp(camp_name, location, coordinates_lat, coordinates_lng, capacity, contact_number, status="Operational"):
+    def create_camp(camp_name, location, coordinates_lat, coordinates_lng, capacity, contact_number):
         """
         Create a new camp and add it to the database.
         """
-        new_camp = Camp(
-            camp_name=camp_name,
-            location=location,
-            coordinates_lat=coordinates_lat,
-            coordinates_lng=coordinates_lng,
-            capacity=capacity,
-            contact_number=contact_number,
-            status=status
-        )
-        db.session.add(new_camp)
-        db.session.commit()
-        return new_camp
+        try:
+            new_camp = Camp(
+                camp_name=camp_name,
+                location=location,
+                coordinates_lat=coordinates_lat,
+                coordinates_lng=coordinates_lng,
+                capacity=capacity,
+                contact_number=contact_number,
+                status="Operational",  # Default status
+                num_people_present=0,  # Default value
+                food_stock_quota=0,  # Default value
+                water_stock_litres=0,  # Default value
+                people_list=[],  # Default empty list
+                donations_received=0.0,  # Default value
+                donations_spent=0.0  # Default value
+            )
+            
+            db.session.add(new_camp)
+            db.session.commit()
+            return new_camp
+        except Exception as e:
+            db.session.rollback()
+            raise ValueError(f"Database error: {str(e)}")
+
 
     @staticmethod
     def delete_camp(cid):
@@ -28,6 +51,9 @@ class CampManager:
         Delete an existing camp by its ID.
         """
         camp = Camp.query.get(cid)
+        camp_n = CampNotification.query.filter_by(camp_id=cid)
+        for i in camp_n:
+            db.session.delete(i)
         if camp:
             db.session.delete(camp)
             db.session.commit()
@@ -69,8 +95,10 @@ class CampManager:
         """
         camp = Camp.query.get(cid)
         if camp:
+            print(kwargs.items(),'\n\n')
             for key, value in kwargs.items():
                 if hasattr(camp, key):
+                    print(f"Updating {key} to {value}")
                     setattr(camp, key, value)
             db.session.commit()
             return camp
@@ -574,3 +602,46 @@ class DonationNotFound(Exception):
     def __init__(self, message="Donation not found"):
         self.message = message
         super().__init__(self.message)
+
+
+
+
+def get_user_activity(uid):
+    """
+    Retrieve a user's recent activity by their ID.
+    """
+    try:
+        # Query the UserActivity table for all activities related to the user
+        activities = UserActivity.query.filter_by(user_id=uid).order_by(UserActivity.timestamp.desc()).all()
+        
+        # Format the results into a list of dictionaries
+        activity_list = [
+            {
+                "activity_id": activity.id,
+                "user_id": activity.user_id,
+                "action": activity.action,
+                "timestamp": activity.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            for activity in activities
+        ]
+        return activity_list
+    except Exception as e:
+        raise Exception(f"Error retrieving user activity: {str(e)}")
+
+def log_recent_activity(user_id, action):
+    """
+    Log a new activity entry for a user.
+    """
+    try:
+        # Create a new UserActivity entry
+        new_activity = UserActivity(
+            user_id=user_id,
+            action=action,
+            timestamp=datetime.now()  # Automatically set the current timestamp
+        )
+        db.session.add(new_activity)
+        db.session.commit()
+        return {"message": "Activity logged successfully", "activity_id": new_activity.id}
+    except Exception as e:
+        db.session.rollback()
+        raise Exception(f"Error logging activity: {str(e)}")

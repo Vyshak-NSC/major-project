@@ -27,9 +27,9 @@
                         <tr>
                             <th>Camp ID</th>
                             <th>Camp Name</th>
+                            <th>Capacity</th>
                             <th>Location</th>
                             <th>Coordinates</th>
-                            <th>Camp Head</th>
                             <th>Contact No.</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -43,28 +43,49 @@
         </div>
     </div>
 
-    <!-- Add/Edit Camp Modal -->
+    <!-- Add Camp Modal -->
     <div id="camp-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 id="modal-title">Add New Camp</h2>
             <form id="camp-form">
-                <label for="camp-id">Camp ID:</label>
-                <input type="text" id="camp-id" name="camp-id" required />
-
-                <label for="location">Location:</label>
-                <input type="text" id="location" name="location" required />
-
-                <label for="coordinates">Coordinates:</label>
-                <input type="text" id="coordinates" name="coordinates" placeholder="Latitude, Longitude" required />
-
-                <label for="camp-head">Camp Head Name:</label>
-                <input type="text" id="camp-head" name="camp-head" required />
-
-                <label for="phone">Phone Number:</label>
-                <input type="text" id="phone" name="phone" required />
-
-                <button type="submit" class="btn">Save</button>
+                <div class="form-grid">
+                    <!-- Row 1 -->
+                    <div class="form-group">
+                        <label for="camp-name">Camp Name:</label>
+                        <input type="text" id="camp-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="camp-capacity">Capacity:</label>
+                        <input type="number" id="camp-capacity" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <!-- Row 2 -->
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="coordinates">Coordinates (lat, lng):</label>
+                        <input type="text" id="coordinates" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <!-- Row 3 -->
+                    <div class="form-group">
+                        <label for="phone">Contact Number:</label>
+                        <input type="text" id="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select id="status">
+                            <option value="Operational">Operational</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Save Camp</button>
             </form>
         </div>
     </div>

@@ -23,63 +23,71 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td>${camp.camp_name}</td>
                     <td>${camp.location}</td>
                     <td>${camp.coordinates.lat}, ${camp.coordinates.lng}</td>
-                    <td>${camp.head}</td>
-                    <td>${camp.contact_number}</td>
+                    <td>${camp.contact_number || "N/A"}</td>
                     <td>${camp.status}</td>
                     <td>
-                        <button class="edit-btn" data-id="${camp.id}">Edit</button>
-                        <button class="delete-btn" data-id="${camp.id}">Delete</button>
+                        <button class="edit-btn" data-id="${camp.cid}">Edit</button>
+                        <button class="delete-btn" data-id="${camp.cid}">Delete</button>
                     </td>
                 `;
                 campTableBody.appendChild(row);
             });
 
             // Add Event Listeners for Edit/Delete
-            document.querySelectorAll(".edit-btn").forEach(button => {
-                button.addEventListener("click", (e) => {
-                    const campId = e.target.dataset.id;
-                    openModalForEdit(campId);
-                });
-            });
-
-            document.querySelectorAll(".delete-btn").forEach(button => {
-                button.addEventListener("click", (e) => {
-                    const campId = e.target.dataset.id;
-                    deleteCamp(campId);
-                });
-            });
+            attachEditListeners();
+            attachDeleteListeners();
         } catch (error) {
             console.error("Error fetching camps:", error);
         }
     }
 
-    // Open Modal for Adding or Editing
-    async function openModalForEdit(campId = null) {
-        if (campId) {
-            try {
-                const response = await fetch(`/api/camps/${campId}`);
-                if (!response.ok) throw new Error("Failed to fetch camp details");
-                const camp = await response.json();
+    // Attach Event Listeners for Edit Buttons
+    function attachEditListeners() {
+        document.querySelectorAll(".edit-btn").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const campId = e.target.dataset.id;
+                openModalForEdit(campId);
+            });
+        });
+    }
 
-                modalTitle.textContent = "Edit Camp";
-                document.getElementById("camp-id").value = camp.id;
-                document.getElementById("place").value = camp.place;
-                document.getElementById("district").value = camp.district;
-                document.getElementById("state").value = camp.state;
-                document.getElementById("coordinates").value = camp.coordinates;
-                document.getElementById("camp-head").value = camp.head;
-                document.getElementById("phone").value = camp.phone;
+    // Attach Event Listeners for Delete Buttons
+    function attachDeleteListeners() {
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const campId = e.target.dataset.id;
+                deleteCamp(campId);
+            });
+        });
+    }
 
-                editingCampId = campId;
-            } catch (error) {
-                console.error("Error fetching camp details:", error);
-            }
-        } else {
-            modalTitle.textContent = "Add New Camp";
-            campForm.reset();
-            editingCampId = null;
-        }
+    // Open Modal for Adding a New Camp
+    function openModalForCreate() {
+        modalTitle.textContent = "Add New Camp";
+        campForm.reset();
+        editingCampId = null;
         modal.style.display = "flex";
+    }
+
+    // Open Modal for Editing an Existing Camp
+    async function openModalForEdit(campId) {
+        try {
+            const response = await fetch(`/admin/get_camp_data/${campId}`);
+            if (!response.ok) throw new Error("Failed to fetch camp details");
+            const camp = await response.json();
+
+            modalTitle.textContent = "Edit Camp";
+            document.getElementById("camp-name").value = camp.camp_name;
+            document.getElementById("camp-capacity").value = camp.capacity;
+            document.getElementById("location").value = camp.location;
+            document.getElementById("coordinates").value = `${camp.coordinates.lat}, ${camp.coordinates.lng}`;
+            document.getElementById("phone").value = camp.contact_number || "";
+
+            editingCampId = camp.cid;
+            modal.style.display = "flex";
+        } catch (error) {
+            console.error("Error fetching camp details:", error);
+        }
     }
 
     // Close Modal
@@ -93,39 +101,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Save Camp (Add or Update)
+    // Handle Form Submission (Create or Edit)
     campForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const campData = {
-            id: document.getElementById("camp-id").value,
-            place: document.getElementById("place").value,
-            district: document.getElementById("district").value,
-            state: document.getElementById("state").value,
-            coordinates: document.getElementById("coordinates").value,
-            head: document.getElementById("camp-head").value,
-            phone: document.getElementById("phone").value,
+        const formData = {
+            camp_name: document.getElementById("camp-name").value,
+            camp_capacity: parseInt(document.getElementById("camp-capacity").value),
+            location: document.getElementById("location").value,
+            coordinates: document.getElementById("coordinates").value.split(",").map(coord => parseFloat(coord.trim())),
+            contact_number: document.getElementById("phone").value,
         };
 
         try {
-            let response;
             if (editingCampId) {
-                // Update existing camp
-                response = await fetch(`/api/camps/${editingCampId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(campData),
-                });
+                await updateCamp(editingCampId, formData);
             } else {
-                // Add new camp
-                response = await fetch("/api/camps", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(campData),
-                });
+                await createCamp(formData);
             }
-
-            if (!response.ok) throw new Error("Failed to save camp");
             modal.style.display = "none";
             fetchAndRenderCamps();
         } catch (error) {
@@ -133,12 +126,42 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Delete Camp
+    // Create a New Camp
+    async function createCamp(formData) {
+        try {
+            const response = await fetch("/admin/create_camp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            if (!response.ok) throw new Error("Failed to create camp");
+        } catch (error) {
+            console.error("Error creating camp:", error);
+            throw error;
+        }
+    }
+
+    // Update an Existing Camp
+    async function updateCamp(campId, formData) {
+        try {
+            const response = await fetch(`/admin/update_camp_data/${campId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            if (!response.ok) throw new Error("Failed to update camp");
+        } catch (error) {
+            console.error("Error updating camp:", error);
+            throw error;
+        }
+    }
+
+    // Delete a Camp
     async function deleteCamp(campId) {
         if (!confirm("Are you sure you want to delete this camp?")) return;
 
         try {
-            const response = await fetch(`/api/camps/${campId}`, { method: "DELETE" });
+            const response = await fetch(`/admin/delete-camp/${campId}`, { method: "DELETE" });
             if (!response.ok) throw new Error("Failed to delete camp");
             fetchAndRenderCamps();
         } catch (error) {
@@ -162,6 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add Camp Button
     addCampBtn.addEventListener("click", () => {
-        openModalForEdit();
+        openModalForCreate();
     });
 });
