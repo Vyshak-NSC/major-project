@@ -26,11 +26,32 @@ def user_activity(uid):
     
     return jsonify(data)
 
-@admin_bp.route('/add_user', methods=['POST'])
+@admin_bp.route("/add_users", methods=["POST"])
 def add_user():
-    """
-    Add a new user (Admin functionality).
-    """
+    try:
+        data = request.json
+        username = data.get("username")
+        email = data.get("email")
+        location = data.get("location")
+        mobile = data.get("mobile")
+        role = data.get("role")
+        associated_camp_id = data.get("associated_camp_id")
+
+        if not all([username, email, role]):  
+            return jsonify({"error": "Username, email, and role are required"}), 400
+        
+        user = UserManager.add_user(username, email, location, mobile, role, associated_camp_id)
+        return jsonify({
+            "uid": user.uid,
+            "username": user.username,
+            "email": user.email,
+            "location": user.location,
+            "mobile": user.mobile,
+            "role": user.role,
+            "associated_camp_id": user.associated_camp_id
+        }), 201  # Return created user with status 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 
 @admin_bp.route('/edit_user/<int:uid>', methods=['POST'])

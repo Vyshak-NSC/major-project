@@ -130,7 +130,7 @@ class CampManager:
 ################## User Management Functions ##################
 class UserManager:
     @staticmethod
-    def add_user(username, email, password, role="user"):
+    def add_user(username, email, password, location=None, mobile=None, role="user", associated_camp_id=None):
         """
         Add a new user to the database.
         """
@@ -145,7 +145,10 @@ class UserManager:
             new_user = User(
                 username=username,
                 email=email,
-                role=role
+                location=location,
+                mobile=mobile,
+                role=role,
+                associated_camp_id=associated_camp_id
             )
             new_user.set_password(password)
             
@@ -171,9 +174,7 @@ class UserManager:
                 "location": user.location,
                 "mobile": user.mobile,
                 "role": user.role,
-                "associated_camp_id": user.associated_camp_id,
-                "friend_list": user.friend_list,
-                "family_list": user.family_list
+                "associated_camp_id": user.associated_camp_id
             }
         raise UserNotFound(f"User with ID {uid} not found.")
 
@@ -186,7 +187,9 @@ class UserManager:
         user = User.query.get(uid)
         if user:
             for key, value in kwargs.items():
-                if hasattr(user, key):
+                if key == "password":
+                    user.set_password(value)  # Hash password if updating
+                elif hasattr(user, key):
                     setattr(user, key, value)
             db.session.commit()
             return user
@@ -218,13 +221,10 @@ class UserManager:
                 "location": user.location,
                 "mobile": user.mobile,
                 "role": user.role,
-                "associated_camp_id": user.associated_camp_id,
-                "friend_list": user.friend_list,
-                "family_list": user.family_list
+                "associated_camp_id": user.associated_camp_id
             }
             for user in users
         ]
-
 
 
 ################## Volunteer Management Functions ##################

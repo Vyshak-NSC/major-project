@@ -16,7 +16,6 @@
                 <label style="color: white;">Filter by Location:</label>
                 <input type="text" id="location-filter" placeholder="Enter location..." />
                 
-                
                 <button id="clear-filters">Clear Filters</button>
             </div>
 
@@ -29,12 +28,11 @@
                     <thead>
                         <tr>
                             <th>UID</th>
-                            <th>Name</th>
+                            <th>Username</th>
                             <th>Email</th>
                             <th>Location</th>
-                            <th>Phone Number</th>
+                            <th>Mobile</th>
                             <th>Role</th>
-                            <th>Associated Camp Id</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -46,34 +44,38 @@
         </div>
     </div>
 
-    <!-- Add/Edit User Modal -->
+    <!-- User Form Modal -->
     <div id="user-modal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 id="modal-title">Add New User</h2>
+            <span class="close-btn">&times;</span>
+            <h2>Add User</h2>
             <form id="user-form">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required />
-                
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required />
+                <input type="email" id="email" name="email" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
 
                 <label for="location">Location:</label>
-                <input type="text" id="location" name="location" required />
+                <input type="text" id="location" name="location">
 
-                <label for="state">Email:</label>
-                <input type="text" id="state" name="state" required />
+                <label for="mobile">Mobile:</label>
+                <input type="tel" id="mobile" name="mobile">
 
-                <label for="phone">Phone Number:</label>
-                <input type="text" id="phone" name="phone" required />
-                
                 <label for="role">Role:</label>
-                <input type="text" id="role" name="role" required />
-                
-                <label for="associated-camp-id">Associated Camp Id:</label>
-                <input type="text" id="associated-camp-id" name="associated-camp-id" required />
+                <select id="role" name="role" required>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="local_auth">Local Auth</option>
+                </select>
 
-                <button type="submit" class="btn">Save</button>
+                <label for="associated-camp-id">Associated Camp ID:</label>
+                <input type="number" id="associated-camp-id" name="associated-camp-id">
+
+                <button type="submit">Add User</button>
             </form>
         </div>
     </div>
