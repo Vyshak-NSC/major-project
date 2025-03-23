@@ -34,7 +34,7 @@
     
     {% set user_role = current_user.role if current_user.is_authenticated else 'guest' %}
 
-    {% if request.endpoint not in  ['auth.login', 'local_auth.index','warehouse_manager.index'] %}
+    {% if request.endpoint not in  ['auth.login', 'local_auth.index','warehouse_manager.index','camp_manager.index'] %}
     <header>
         <div class="nav-container">
             <nav>

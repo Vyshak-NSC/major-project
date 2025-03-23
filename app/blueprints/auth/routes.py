@@ -11,14 +11,38 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
+        
+        #  user login
         if user and user.check_password(password) and user.role == 'user':
             login_user(user)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('user.index'))
+        
+        #  admin login
         elif user and user.check_password(password) and user.role == 'admin':
             login_user(user)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('admin.index'))
+        
+        # camp head login
+        elif user and user.check_password(password) and user.role == 'local_auth':
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('camp_manager.index'))
+        
+        # local auth login
+        elif user and user.check_password(password) and user.role == 'camp_manager':
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('local_auth.index'))
+        
+        # warehouse manager login
+        elif user and user.check_password(password) and user.role == 'warehouse_manager':
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('warehouse_manager.index'))
+        
+        
         else:
             flash('Invalid email or password', 'danger')
             redirect(url_for('auth.login'))

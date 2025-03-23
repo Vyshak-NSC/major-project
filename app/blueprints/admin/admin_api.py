@@ -34,12 +34,14 @@ def get_user(user_id):
 
 
 @admin_bp.route('/get_user_activity/<int:uid>')
+@login_required
 def user_activity(uid):
     data = get_user_activity(uid)
     
     return jsonify(data)
 
 @admin_bp.route("/add_user", methods=["POST"])
+@login_required
 def add_user():
     try:
         data = request.json

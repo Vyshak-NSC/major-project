@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const user = await response.json();
 
             document.getElementById("username").value = user.username;
-            document.getElementById("password").value = "";
+            document.getElementById("password").value = user.password;
             document.getElementById("email").value = user.email;
             document.getElementById("location").value = user.location || "";
             document.getElementById("role").value = user.role;

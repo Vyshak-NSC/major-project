@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import jsonify
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash
 from .models import Camp, CampNotification, Donation, DonationAmount, UserActivity, Volunteer, User, VolunteerHistory, VolunteerRole , Thread, Reply, db
@@ -83,6 +84,18 @@ class CampManager:
             }
         raise CampNotFound(f"Camp with ID {cid} not found.")
 
+    @staticmethod
+    def get_people_in_camp(camp_id):
+        people = User.query.filter_by(associated_camp_id=camp_id).all()
+        return [{
+                    "username": person.username, 
+                    "email": person.email,
+                    "uid":person.uid,
+                    "location":person.location,
+                    "mobile":person.mobile
+                } for person in people]
+
+    
     @staticmethod
     def update_camp_data(cid, **kwargs):
         """

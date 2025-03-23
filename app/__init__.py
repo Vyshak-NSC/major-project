@@ -30,17 +30,19 @@ def create_app():
 
 
     # Register Blueprints
+    from app.blueprints.auth import auth_bp
     from app.blueprints.users import user_bp
     from app.blueprints.admin import admin_bp
-    from app.blueprints.auth import auth_bp
     from app.blueprints.local_auth import local_auth_bp
+    from app.blueprints.camp_manager import camp_manager_bp
     from app.blueprints.warehouse_manager import warehouse_bp
     
     app.register_blueprint(user_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
-    app.register_blueprint(local_auth_bp)
     app.register_blueprint(warehouse_bp)
+    app.register_blueprint(local_auth_bp)
+    app.register_blueprint(camp_manager_bp)
     
     
     @app.route('/')
