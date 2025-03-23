@@ -3,53 +3,79 @@ document.addEventListener("DOMContentLoaded", () => {
     const userModal = document.getElementById("user-modal");
     const closeModalBtn = document.querySelector(".close-btn");
     const userForm = document.getElementById("user-form");
-    const addUserBtn = document.getElementById("add-user-btn"); // Add User Button
+    const addUserBtn = document.getElementById("add-user-btn");
+    
+    const searchNameInput = document.getElementById("name-filter"); // Name filter input
+    const searchLocationInput = document.getElementById("location-filter"); // Location filter input
 
-    let editingUserId = null; // Store user ID when editing
+    let editingUserId = null;
+    let usersData = []; // Store all users for filtering
 
     // Fetch and Render Users
     async function fetchAndRenderUsers() {
         try {
             const response = await fetch("/admin/get_all_users");
             if (!response.ok) throw new Error("Failed to fetch users");
-            const users = await response.json();
-
-            userList.innerHTML = ""; // Clear the list before updating
-            users.forEach((user) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${user.uid}</td>
-                    <td>${user.username}</td>
-                    <td>${user.email}</td>
-                    <td>${user.location || "N/A"}</td>
-                    <td>${user.role}</td>
-                    <td>
-                        <button class="edit-btn" data-id="${user.uid}">Edit</button>
-                        <button class="delete-btn" data-id="${user.uid}">Delete</button>
-                    </td>
-                `;
-                userList.appendChild(row);
-            });
-
-            // Attach Delete Event Listeners
-            document.querySelectorAll(".delete-btn").forEach(button => {
-                button.addEventListener("click", (e) => {
-                    const userId = e.target.dataset.id;
-                    deleteUser(userId);
-                });
-            });
-
-            // Attach Edit Event Listeners
-            document.querySelectorAll(".edit-btn").forEach(button => {
-                button.addEventListener("click", (e) => {
-                    const userId = e.target.dataset.id;
-                    openEditModal(userId);
-                });
-            });
-
+            usersData = await response.json(); // Store data for filtering
+            renderUsers(usersData);
         } catch (error) {
             console.error("Error fetching users:", error);
         }
+    }
+
+    // Render Users from Data
+    function renderUsers(users) {
+        userList.innerHTML = "";
+        users.forEach((user) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${user.uid}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>${user.location || "N/A"}</td>
+                <td>${user.role}</td>
+                <td>
+                    <button class="edit-btn" data-id="${user.uid}">Edit</button>
+                    <button class="delete-btn" data-id="${user.uid}">Delete</button>
+                </td>
+            `;
+            userList.appendChild(row);
+        });
+
+        attachEventListeners();
+    }
+
+    // Attach Event Listeners to Buttons
+    function attachEventListeners() {
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", (e) => {
+                deleteUser(e.target.dataset.id);
+            });
+        });
+
+        document.querySelectorAll(".edit-btn").forEach(button => {
+            button.addEventListener("click", (e) => {
+                openEditModal(e.target.dataset.id);
+            });
+        });
+    }
+
+    // Filter Users by Name
+    function filterByName() {
+        const query = searchNameInput.value.toLowerCase().trim();
+        const filteredUsers = usersData.filter(user =>
+            user.username.toLowerCase().includes(query)
+        );
+        renderUsers(filteredUsers);
+    }
+
+    // Filter Users by Location
+    function filterByLocation() {
+        const query = searchLocationInput.value.toLowerCase().trim();
+        const filteredUsers = usersData.filter(user =>
+            user.location && user.location.toLowerCase().includes(query)
+        );
+        renderUsers(filteredUsers);
     }
 
     // Delete User Function
@@ -59,8 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`/admin/delete_user/${userId}`, { method: "DELETE" });
             if (!response.ok) throw new Error("Failed to delete user");
-
-            fetchAndRenderUsers(); // Refresh list after deletion
+            fetchAndRenderUsers();
         } catch (error) {
             console.error("Error deleting user:", error);
         }
@@ -74,16 +99,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const user = await response.json();
 
-            // Fill the form with existing user data
             document.getElementById("username").value = user.username;
+            document.getElementById("password").value = "";
             document.getElementById("email").value = user.email;
             document.getElementById("location").value = user.location || "";
-            // document.getElementById("mobile").value = user.mobile || "";
             document.getElementById("role").value = user.role;
             document.getElementById("associated-camp-id").value = user.associated_camp_id || "";
 
-            editingUserId = userId; // Store ID for updating
-            userModal.style.display = "block"; // Show modal
+            editingUserId = userId;
+            userModal.style.display = "block";
         } catch (error) {
             console.error("Error fetching user details:", error);
         }
@@ -91,37 +115,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Open Modal for Adding New User
     function openAddModal() {
-        // Clear the form fields
         userForm.reset();
-        editingUserId = null; // Ensure it's a new user
-        userModal.style.display = "block"; // Show modal
+        editingUserId = null;
+        userModal.style.display = "block";
     }
 
     // Handle Form Submission (Add or Edit User)
     userForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const userData = {
-            username: document.getElementById("username").value,
-            email: document.getElementById("email").value,
-            password: document.getElementById("password").value,
-            location: document.getElementById("location").value,
-            // mobile: document.getElementById("mobile").value,
+        let userData = {
+            username: document.getElementById("username").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value.trim(),
+            location: document.getElementById("location").value.trim(),
             role: document.getElementById("role").value,
-            associated_camp_id: document.getElementById("associated-camp-id").value
+            associated_camp_id: document.getElementById("associated-camp-id").value.trim()
         };
+
+        if (editingUserId) {
+            Object.keys(userData).forEach((key) => {
+                if (userData[key] === "" || userData[key] === null) {
+                    delete userData[key];
+                }
+            });
+        } else {
+            if (!userData.username || !userData.email || !userData.password) {
+                alert("Username, Email, and Password are required to add a new user.");
+                return;
+            }
+        }
 
         try {
             let response;
             if (editingUserId) {
-                // Update existing user
                 response = await fetch(`/admin/update_user/${editingUserId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(userData)
                 });
             } else {
-                // Add new user
                 response = await fetch("/admin/add_user", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -131,8 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!response.ok) throw new Error("Failed to save user");
 
-            userModal.style.display = "none"; // Hide modal
-            fetchAndRenderUsers(); // Refresh list
+            userModal.style.display = "none";
+            fetchAndRenderUsers();
         } catch (error) {
             console.error("Error saving user:", error);
         }
@@ -152,6 +185,10 @@ document.addEventListener("DOMContentLoaded", () => {
             userModal.style.display = "none";
         }
     });
+
+    // Attach Filter Event Listeners
+    searchNameInput.addEventListener("input", filterByName);
+    searchLocationInput.addEventListener("input", filterByLocation);
 
     // Load users when the page loads
     fetchAndRenderUsers();
