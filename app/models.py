@@ -50,8 +50,6 @@ class Camp(db.Model):
     water_stock_litres = db.Column(db.Integer, default=0)
     contact_number = db.Column(db.String(20))
     people_list = db.Column(db.JSON, default=[])  # Changed to JSON for better structure and querying
-    donations_received = db.Column(db.Float, default=0.0)
-    donations_spent = db.Column(db.Float, default=0.0)
 
     campNotifications = db.relationship('CampNotification', backref='camp', lazy=True)
 

@@ -103,29 +103,43 @@ def create_camp():
     """
     try:
         data = request.get_json()
-        required_fields = ['camp_name', 'location', 'lat', 'lng', 'capacity', 'contact_number']
+        print("Received Data:", data)  # Debugging
+
+        # Ensure required fields are present
+        required_fields = ['camp_name', 'location', 'lat', 'lng', 'camp_capacity', 'contact_number']
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({'error': f'Missing or invalid field: {field}'}), 400
 
+        # Convert lat/lng to float (if needed)
+        lat = float(data['lat'])
+        lng = float(data['lng'])
+
+        # Ensure capacity is an integer
+        capacity = int(data['camp_capacity'])
+
+        # Create the camp
         new_camp = CampManager.create_camp(
             camp_name=data['camp_name'],
             location=data['location'],
-            coordinates_lat=data['lat'],
-            coordinates_lng=data['lng'],
-            capacity=data['capacity'],
+            coordinates_lat=lat,
+            coordinates_lng=lng,
+            capacity=capacity,
             contact_number=data['contact_number']
         )
-        
+
+        # Log recent activity
         log_recent_activity(user_id=current_user.uid, action=f"Added camp: {data['camp_name']}")
-        
+
         return jsonify({'message': 'Camp created successfully', 'camp_id': new_camp.cid}), 201
+
     except ValueError as ve:
-        return jsonify({'error': str(ve)}), 400
+        return jsonify({'error': f'Value error: {str(ve)}'}), 400
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-
+        return jsonify({'error': f'An unexpected error occurred: {e}'}), 500
+    
+    
 @admin_bp.route('/update_camp_data/<int:camp_id>', methods=['PUT'])
 def update_camp_data(camp_id):
     """

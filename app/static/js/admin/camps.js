@@ -16,24 +16,26 @@ document.addEventListener("DOMContentLoaded", () => {
             const camps = await response.json();
 
             campTableBody.innerHTML = "";
-            camps.forEach((camp) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${camp.cid}</td>
-                    <td>${camp.camp_name}</td>
-                    <td>${camp.location}</td>
-                    <td>${camp.coordinates.lat}, ${camp.coordinates.lng}</td>
-                    <td>${camp.contact_number || "N/A"}</td>
-                    <td>${camp.status}</td>
-                    <td>
-                        <button class="edit-btn" data-id="${camp.cid}">Edit</button>
-                        <button class="delete-btn" data-id="${camp.cid}">Delete</button>
-                    </td>
-                `;
-                campTableBody.appendChild(row);
-            });
 
-            // Add Event Listeners for Edit/Delete
+            camps
+                .filter(camp => camp.cid.toString().includes(filter)) // Filtering logic
+                .forEach((camp) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${camp.cid}</td>
+                        <td>${camp.camp_name}</td>
+                        <td>${camp.location}</td>
+                        <td>${camp.coordinates.lat}, ${camp.coordinates.lng}</td>
+                        <td>${camp.contact_number || "N/A"}</td>
+                        <td>${camp.status}</td>
+                        <td>
+                            <button class="edit-btn" data-id="${camp.cid}">Edit</button>
+                            <button class="delete-btn" data-id="${camp.cid}">Delete</button>
+                        </td>
+                    `;
+                    campTableBody.appendChild(row);
+                });
+
             attachEditListeners();
             attachDeleteListeners();
         } catch (error) {
@@ -105,30 +107,52 @@ document.addEventListener("DOMContentLoaded", () => {
     campForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const formData = {
-            camp_name: document.getElementById("camp-name").value,
-            camp_capacity: parseInt(document.getElementById("camp-capacity").value),
-            location: document.getElementById("location").value,
-            coordinates: document.getElementById("coordinates").value.split(",").map(coord => parseFloat(coord.trim())),
-            contact_number: document.getElementById("phone").value,
+        // Get values from form inputs
+        let coordinatesInput = document.getElementById("coordinates").value.trim();
+        let [lat, lng] = coordinatesInput.split(",").map(coord => coord.trim());
+
+        // Convert to float if possible
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
+
+        if (isNaN(lat) || isNaN(lng)) {
+            alert("Invalid coordinates. Please enter in 'lat, lng' format.");
+            return;
+        }
+
+        let formData = {
+            camp_name: document.getElementById("camp-name").value.trim(),
+            camp_capacity: parseInt(document.getElementById("camp-capacity").value.trim()),
+            location: document.getElementById("location").value.trim(),
+            lat: lat,
+            lng: lng,
+            contact_number: document.getElementById("phone").value.trim()
         };
 
         try {
             if (editingCampId) {
+                // If `editingCampId` is set, update the existing camp
                 await updateCamp(editingCampId, formData);
+                fetchAndRenderCamps();
+                document.getElementById('camp-modal').style.display = "none";
             } else {
+                // Otherwise, create a new camp
                 await createCamp(formData);
+                fetchAndRenderCamps();
+                document.getElementById('camp-modal').style.display = "none";
             }
-            modal.style.display = "none";
-            fetchAndRenderCamps();
         } catch (error) {
-            console.error("Error saving camp:", error);
+            alert("Error creating camp: " + error.message);
         }
     });
 
     // Create a New Camp
     async function createCamp(formData) {
         try {
+            // Convert array to string if it's an array
+            if (Array.isArray(formData.coordinates)) {
+                formData.coordinates = formData.coordinates.join(", "); // Convert to "lat, lng"
+}
             const response = await fetch("/admin/create_camp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

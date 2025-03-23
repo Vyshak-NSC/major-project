@@ -33,8 +33,6 @@ class CampManager:
                 food_stock_quota=0,  # Default value
                 water_stock_litres=0,  # Default value
                 people_list=[],  # Default empty list
-                donations_received=0.0,  # Default value
-                donations_spent=0.0  # Default value
             )
             
             db.session.add(new_camp)
@@ -81,9 +79,7 @@ class CampManager:
                 "food_stock_quota": camp.food_stock_quota,
                 "water_stock_litres": camp.water_stock_litres,
                 "contact_number": camp.contact_number,
-                "people_list": camp.people_list,
-                "donations_received": camp.donations_received,
-                "donations_spent": camp.donations_spent
+                "people_list": camp.people_list
             }
         raise CampNotFound(f"Camp with ID {cid} not found.")
 
@@ -125,9 +121,7 @@ class CampManager:
                 "food_stock_quota": camp.food_stock_quota,
                 "water_stock_litres": camp.water_stock_litres,
                 "contact_number": camp.contact_number,
-                "people_list": camp.people_list,
-                "donations_received": camp.donations_received,
-                "donations_spent": camp.donations_spent
+                "people_list": camp.people_list
             }
             for camp in camps
         ]

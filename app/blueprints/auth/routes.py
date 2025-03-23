@@ -22,7 +22,7 @@ def login():
         else:
             flash('Invalid email or password', 'danger')
             redirect(url_for('auth.login'))
-    return render_template('auth/login.html')
+    return render_template('auth/login.html'),201
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
