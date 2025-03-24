@@ -1,6 +1,8 @@
+from sqlalchemy import func
 from .extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.ext.hybrid import hybrid_property
 
 class User(db.Model, UserMixin):
     uid = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -40,21 +42,46 @@ class User(db.Model, UserMixin):
 class Camp(db.Model):
     cid = db.Column(db.Integer, primary_key=True)
     camp_name = db.Column(db.String(100), unique=True, nullable=False)
-    location = db.Column(db.String(100), nullable=False)
-    coordinates_lat = db.Column(db.Float, nullable=False)  # Latitude
-    coordinates_lng = db.Column(db.Float, nullable=False)  # Longitude
-    status = db.Column(db.String(20), nullable=False, default="Operational")
-    capacity = db.Column(db.Integer, nullable=False)
-    num_people_present = db.Column(db.Integer, default=0)
-    food_stock_quota = db.Column(db.Integer, default=0)
-    water_stock_litres = db.Column(db.Integer, default=0)
-    contact_number = db.Column(db.String(20))
-    people_list = db.Column(db.JSON, default=[])  # Changed to JSON for better structure and querying
-    campNotifications = db.relationship('CampNotification', backref='camp', lazy=True)
-
     camp_head_id = db.Column(db.Integer, db.ForeignKey('user.uid', name='fk_camp_head_id', ondelete='SET NULL'), nullable=True)
     camp_head = db.relationship('User', foreign_keys=[camp_head_id])
 
+    location = db.Column(db.String(100), nullable=False)
+    coordinates_lat = db.Column(db.Float, nullable=False)
+    coordinates_lng = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="Operational")
+
+    capacity = db.Column(db.Integer, nullable=False)
+    contact_number = db.Column(db.String(20))
+    
+    people_list = db.Column(db.JSON, default=[])  # JSON list of user IDs
+    campNotifications = db.relationship('CampNotification', backref='camp', lazy=True)
+
+    food_capacity = db.Column(db.Integer, default=0)
+    food_stock_quota = db.Column(db.Integer, default=0)
+    
+    water_capacity = db.Column(db.Integer, default=0)
+    water_stock_litres = db.Column(db.Integer, default=0)
+    
+    essentials_capacity = db.Column(db.Integer, default=0)
+    essentials_stock = db.Column(db.Integer, default=0)
+    
+    clothes_capacity = db.Column(db.Integer, default=0)
+    clothes_stock = db.Column(db.Integer, default=0)
+
+    # Define relationship with users in the camp
+    users = db.relationship('User', backref='camp', lazy=True, foreign_keys='User.associated_camp_id')
+
+    @hybrid_property
+    def num_people_present(self):
+        """Compute the number of people in the camp dynamically."""
+        return len(self.people_list)  # OR len(self.users) if using relationships
+
+    @num_people_present.expression
+    def num_people_present(cls):
+        """Allows querying with SQL expressions."""
+        return (db.select([func.count(User.uid)])
+                .where(User.associated_camp_id == cls.cid)
+                .scalar_subquery())
 
 class CampNotification(db.Model):
     aid = db.Column(db.Integer, primary_key=True)

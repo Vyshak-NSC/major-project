@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     row.innerHTML = `
                         <td>${camp.cid}</td>
                         <td>${camp.camp_name}</td>
+                        <td>${camp.capacity}</td>
                         <td>${camp.location}</td>
                         <td>${camp.coordinates.lat}, ${camp.coordinates.lng}</td>
                         <td>${camp.contact_number || "N/A"}</td>

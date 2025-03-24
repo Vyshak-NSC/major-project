@@ -69,6 +69,8 @@ class CampManager:
             return {
                 "cid": camp.cid,
                 "camp_name": camp.camp_name,
+                "camp_head" : camp.camp_head.username,
+                "mobile": camp.camp_head.mobile,
                 "location": camp.location,
                 "coordinates": {
                     "lat": camp.coordinates_lat,
@@ -78,7 +80,13 @@ class CampManager:
                 "capacity": camp.capacity,
                 "num_people_present": camp.num_people_present,
                 "food_stock_quota": camp.food_stock_quota,
+                "food_capacity" : camp.food_capacity,
                 "water_stock_litres": camp.water_stock_litres,
+                "water_capacity": camp.water_capacity,
+                "clothes_stock": camp.clothes_stock,
+                "clothes_capacity": camp.clothes_capacity,
+                "essentials_stock": camp.essentials_stock,
+                "essentials_capacity": camp.essentials_capacity,
                 "contact_number": camp.contact_number,
                 "people_list": camp.people_list
             }
@@ -383,7 +391,7 @@ class ForumManager:
         """
         Create a new forum thread.
         """
-        new_thread = Thread(user_id=user_id, title=title, content=content)
+        new_thread = Thread(user_id=user_id, title=title, content=content,timestamp=datetime.now())
         db.session.add(new_thread)
         db.session.commit()
         return {"message": "Thread created successfully", "thread_id": new_thread.tid}

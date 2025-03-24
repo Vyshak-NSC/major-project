@@ -76,8 +76,8 @@ function setupReliefCampChart() {
 // Set up event listeners for buttons and interactions
 function setupEventListeners() {
     document.querySelector(".next-camp-btn").addEventListener("click", handleNextCampClick);
-    document.getElementById("chatbot-icon").addEventListener("click", toggleChatbot);
-    document.getElementById("chatbot-close").addEventListener("click", closeChatbot);
+    // document.getElementById("chatbot-icon").addEventListener("click", toggleChatbot);
+    // document.getElementById("chatbot-close").addEventListener("click", closeChatbot);
     document.querySelector(".refresh-btn").addEventListener("click", refreshWeather);
 }
 

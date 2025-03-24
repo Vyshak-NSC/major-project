@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${user.username}</td>
                 <td>${user.email}</td>
                 <td>${user.location || "N/A"}</td>
+                <td>${user.mobile || "N/A"}</td>
                 <td>${user.role}</td>
                 <td>
                     <button class="edit-btn" data-id="${user.uid}">Edit</button>
@@ -100,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const user = await response.json();
 
             document.getElementById("username").value = user.username;
-            document.getElementById("password").value = user.password;
+            document.getElementById("password").value = 'aaa';
             document.getElementById("email").value = user.email;
             document.getElementById("location").value = user.location || "";
             document.getElementById("role").value = user.role;

@@ -47,23 +47,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Populate People List
 document.addEventListener("DOMContentLoaded", function () {
-    fetch('/camp_manager/get_people')
-        .then(response => response.json())
-        .then(data => {
-            const peopleList = document.getElementById("people-list");
-            peopleList.innerHTML = ""; // Clear existing list
-            data.forEach(person => {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                    <strong>ID:</strong> ${person.uid}<br>
-                    <strong>Name:</strong> ${person.username}<br>
-                    <strong>Contact:</strong> ${person.mobilet}<br>
-                    <strong>Place:</strong> ${person.location}
-                  `;
-                peopleList.appendChild(li);
-            });
-        })
-        .catch(error => console.error("Error fetching people:", error));
+  const searchInput = document.getElementById("filter");
+  const peopleList = document.getElementById("people-list");
+
+  fetch('/camp_manager/get_people')
+      .then(response => response.json())
+      .then(data => {
+          populatePeopleList(data);
+
+          // Add search event listener
+          searchInput.addEventListener("input", function () {
+              const searchTerm = searchInput.value.toLowerCase();
+              const filteredPeople = data.filter(person =>
+                  person.username.toLowerCase().includes(searchTerm)
+              );
+              populatePeopleList(filteredPeople);
+          });
+      })
+      .catch(error => console.error("Error fetching people:", error));
+
+  function populatePeopleList(people) {
+      peopleList.innerHTML = ""; // Clear existing list
+      people.forEach(person => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+              <strong>ID:</strong> ${person.uid}<br>
+              <strong>Name:</strong> ${person.username}<br>
+              <strong>Contact:</strong> ${person.mobile}<br>
+              <strong>Place:</strong> ${person.location}
+          `;
+          peopleList.appendChild(li);
+      });
+  }
 });
 
 // Fake Data for User Requests
@@ -89,41 +104,24 @@ requests.forEach(request => {
   requestsList.appendChild(li);
 });
 
-// People Capacity Doughnut Chart
-// const peopleCapacityChart = new Chart(document.getElementById('peopleCapacityChart'), {
-//   type: 'doughnut',
-//   data: {
-//     labels: ['Current', 'Remaining'],
-//     datasets: [{
-//       data: [120, 80], // Current: 120, Remaining: 80
-//       backgroundColor: ['#2575fc', '#ff6f61'], // Blue and Baby Pink
-//     }],
-//   },
-//   options: {
-//     responsive: true,
-//     maintainAspectRatio: false,
-//     plugins: {
-//       legend: {
-//         position: 'bottom', // Move legend to the bottom
-//       },
-//     },
-//   },
-// });
 
 document.addEventListener("DOMContentLoaded", function () {
   fetch('/camp_manager/get_camp_details')
         .then(response => response.json())
         .then(data => {
             if (!data) return;
-
             // Default values if data is missing
             const numPeoplePresent = data.num_people_present || 0;
             const capacity = data.capacity || 0;
+            
             const foodStockQuota = data.food_stock_quota || 0;
+            const foodCapacity = data.food_capacity || 0;
             const waterStockLitres = data.water_stock_litres || 0;
-            const clothesRemaining = data.clothes_remaining || 0;
+            
+            const clothesRemaining = data.clothes_stock || 0;
             const clothesCapacity = data.clothes_capacity || 0;
-            const essentialsRemaining = data.essentials_remaining || 0;
+
+            const essentialsRemaining = data.essentials_stock || 0;
             const essentialsCapacity = data.essentials_capacity || 0;
 
             // Update People Capacity Chart
@@ -149,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.querySelector('.resource-details').innerHTML = `
                 <i class="fas fa-utensils"></i>
                 <p><strong>Food Remaining:</strong> ${foodStockQuota} kg</p>
-                <p><strong>Food Capacity:</strong> 1000 kg</p>
+                <p><strong>Food Capacity:</strong> ${foodCapacity} kg</p>
                 <i class="fas fa-tint"></i>
                 <p><strong>Water Remaining:</strong> ${waterStockLitres} L</p>
                 <p><strong>Water Capacity:</strong> 5000 L</p>
@@ -172,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const campName = data.camp_name ?? "Unknown";
             const location = data.location ?? "Not Available";
             const campHead = data.camp_head ?? "Unknown";
-            const phone = data.phone ?? "N/A";
+            const phone = data.mobile ?? "N/A";
             // Update Camp Details Section
             document.querySelector('.camp-details').innerHTML = `
                 <div class="detail-item">

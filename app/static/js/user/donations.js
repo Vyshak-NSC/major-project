@@ -94,6 +94,8 @@ function submitDonationForm(event) {
             if (data.success) {
                 toggleDisplay(document.getElementById('essential-form-popup'), 'none'); // Close the dialog
                 fetchDonationSummary(); // Refresh donation summary and chart
+                document.getElementById('essential-form').reset();
+            
             } else {
                 alert('An error occurred. Please try again.');
                 console.error(data.error);

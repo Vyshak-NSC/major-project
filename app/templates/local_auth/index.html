@@ -5,12 +5,17 @@
 {% endblock %}
 
 {% block content %}
+<!-- Dark Overlay for Background Image -->
+<div class="overlay"></div>
 
 <!-- Heading with Typewriter Effect -->
 <div class="heading">
   <span class="static-text">Welcome Local Authority</span>
   <span class="typewriter-text"></span>
 </div>
+
+<!-- Logout Button -->
+<a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
 
 <!-- First Row -->
 <div class="row">
@@ -76,11 +81,11 @@
   <!-- Box 3: Map -->
   <div class="box">
     <h2>Camp Locations</h2>
-    <div id="map" class="map-container"></div>
+    <div id="map" class="map-container" style="height: 300px;"></div>
   </div>
 </div>
 {% endblock %}
 
 {% block jscontent %}
-    <script src="{{ url_for('static', filename='/js/local_auth.js')}}"></script>
+    <script src="{{ url_for('static', filename='/js/local_auth/index.js')}}"></script>
 {% endblock %}

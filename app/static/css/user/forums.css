@@ -9,15 +9,17 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    gap: 1.5vh; /* Slightly reduced gap between rows */
+    gap: 3vh; /* Slightly reduced gap between rows */
     animation: slideInFromTop 1s ease-in-out;
 }
 
 .top-row, .bottom-row {
     display: flex;
     justify-content: space-between;
-    gap: 1.5vw; /* Slightly reduced gap between boxes */
+    gap: 2vw; /* Slightly reduced gap between boxes */
     animation: fadeIn 1s ease-in-out;
+    height: 100%;
+    max-height: 350px;
 }
 
 .box {
@@ -145,8 +147,12 @@
 }
 
 .thread-item {
-    padding: .1vh 1.5vw;
+    border: 3px solid rgba(198, 225, 80, 0.648); /* Subtle border for definition */
+    border-radius: 5px;
+    padding: 2vh 1.5vw;
     margin-left: -5%;
+    margin-right: 5%;
+    margin-bottom: 3%;
     border-radius: 15px;
     transition: all 0.3s ease;
 }
@@ -157,6 +163,7 @@
     justify-content: space-between;
     margin-bottom: 0.5vh;
     transition: transform 0.3s ease;
+    
 }
 
 .thread-header:hover {
@@ -211,7 +218,37 @@
     background: #005bb5;
     transform: scale(1.05);
 }
+.toggle-replies-btn{
+    background: #8ced58fc;
+    color: rgb(11, 11, 11);
+    border: none;
+    padding: 0.8vh 2vw;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 1vh;
+    transition: all 0.3s ease;
+}
+.toggle-replies-btn:hover {
+    background: #6feb2db4;
+    transform: scale(1.05);
+}
+.reply-content{
+    border-radius: 6px;
+    margin-top: 1vh;
 
+}
+.reply-form button{
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.8vh 2vw;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 1vh;
+    transition: all 0.3s ease;
+}
 /* Animations */
 @keyframes fadeIn {
     0% {
