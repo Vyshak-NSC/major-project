@@ -14,3 +14,8 @@ def get_people():
     list = CampManager.get_people_in_camp(camp_id)  # Fetch people from database
     
     return jsonify(list)
+
+@camp_manager_bp.route('/get_camp_details')
+def get_camp_details():
+    data = CampManager.get_camp_data(current_user.associated_camp_id)
+    return jsonify(data)

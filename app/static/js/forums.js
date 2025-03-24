@@ -1,6 +1,25 @@
 // load threads on page load
 document.addEventListener("DOMContentLoaded", function () {
     loadThreads();
+    document.querySelectorAll('.faq-question').forEach((question) => {
+        question.addEventListener('click', () => {
+            const answer = question.nextElementSibling;
+    
+            // Close all other answers
+            document.querySelectorAll('.faq-answer').forEach((otherAnswer) => {
+                if (otherAnswer !== answer && otherAnswer.style.display === 'block') {
+                    otherAnswer.style.display = 'none';
+                }
+            });
+    
+            // Toggle the clicked answer
+            if (answer.style.display === 'block') {
+                answer.style.display = 'none'; // Hide the answer
+            } else {
+                answer.style.display = 'block'; // Show the answer
+            }
+        });
+    });
 });
 
 // 🔹 Load threads (Reusable function)

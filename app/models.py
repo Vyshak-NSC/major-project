@@ -50,8 +50,10 @@ class Camp(db.Model):
     water_stock_litres = db.Column(db.Integer, default=0)
     contact_number = db.Column(db.String(20))
     people_list = db.Column(db.JSON, default=[])  # Changed to JSON for better structure and querying
-
     campNotifications = db.relationship('CampNotification', backref='camp', lazy=True)
+
+    camp_head_id = db.Column(db.Integer, db.ForeignKey('user.uid', name='fk_camp_head_id', ondelete='SET NULL'), nullable=True)
+    camp_head = db.relationship('User', foreign_keys=[camp_head_id])
 
 
 class CampNotification(db.Model):

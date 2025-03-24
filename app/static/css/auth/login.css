@@ -110,6 +110,14 @@ h2 {
   top: -5px;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: background-color 9999s ease-in-out;
+  -webkit-text-fill-color: #fff !important;
+}
+
 .remember {
   margin: -5px 0 1rem 5px; /* Reduced margin */
 }

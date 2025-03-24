@@ -77,13 +77,14 @@
   
 }
 
-.quick-actions button {
+.quick-actions .btn {
   background: #2575fc;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   color: white;
   cursor: pointer;
+  text-decoration: none;
   transition: background 0.3s;
 
 }

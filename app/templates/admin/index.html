@@ -35,10 +35,10 @@
           </div>
         </div>
         <div class="quick-actions">
-          <button>Add User</button>
-          <button>Add Camp</button>
-          <button>Add Warehouse</button>
-          <button>Add Sensor</button>
+          <a href="{{ url_for('admin.users') }}" class="btn">Add User</a>
+          <a href="{{ url_for('admin.camps') }}" class="btn">Add Camp</a>
+          <a href="{{ url_for('admin.index') }}" class="btn">Add Warehouse</a>
+          <a href="{{ url_for('admin.index') }}" class="btn">Add Sensor</a>
         </div>
       </section>
 

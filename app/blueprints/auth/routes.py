@@ -28,13 +28,13 @@ def login():
         elif user and user.check_password(password) and user.role == 'local_auth':
             login_user(user)
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('camp_manager.index'))
+            return redirect(url_for('local_auth.index'))
         
         # local auth login
         elif user and user.check_password(password) and user.role == 'camp_manager':
             login_user(user)
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('local_auth.index'))
+            return redirect(url_for('camp_manager.index'))
         
         # warehouse manager login
         elif user and user.check_password(password) and user.role == 'warehouse_manager':
