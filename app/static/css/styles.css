@@ -9,7 +9,12 @@ body {
     display: flex;
     flex-direction: column;
     max-height: 100vh;
+    overflow: hidden;
     position: relative; /* Important for positioning the pseudo-element */
+}
+
+.overflow-allowed{
+    overflow: scroll;
 }
 /* Dark Overlay using Pseudo-Element */
 body::before {
