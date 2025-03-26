@@ -31,7 +31,9 @@
 .top-row {
     display: flex;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
+    height: 100%;
+    min-height: 320px;
 }
 
 /* Become a Volunteer Section */
@@ -155,7 +157,7 @@
 .bottom-row {
     display: flex;
     justify-content: center;
-    margin-top: -2.5vh;
+    margin-top: -5vh;
     animation: slideInFromBottom 1s ease-in-out;
 }
 
@@ -163,6 +165,8 @@
 .volunteer-history {
     width: 80%;
     text-align: center;
+   
+    
 }
 .volunteer-history h2 {
     font-size: 2rem;
@@ -180,6 +184,7 @@
     margin-top: 1vh;
     font-size: 1.2rem;
     color: beige;
+    overflow-y: scroll;
 }
 #history-list li {
     margin: 0.8vh 0;

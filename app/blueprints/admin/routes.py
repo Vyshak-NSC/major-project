@@ -26,6 +26,10 @@ def warehouse():
 def users():
     return render_template('admin/user.html')
 
+@admin_bp.route('/sensor')
+@login_required
+def sensor():
+    return render_template('admin/sensor.html')
 
 
 

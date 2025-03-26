@@ -7,7 +7,7 @@
 
 {% block content %}
 <div class="login-body">
-  <div class="title">Landslide Detection</div>
+  <div class="title">LOOP SENSE</div>
   <!-- Login & Registration Forms -->
   <div class="wrapper">
     <!-- Login Form -->
@@ -27,7 +27,14 @@
         </div> -->
         <button type="submit">Login</button>
         <div class="signUp-link">
-          <p>Don't have an account? <a href="#" class="signUpBtn-link">Sign Up</a></p>
+          <p>Don't have an account?
+            <span 
+              class="signUpBtn-link" 
+              style="text-decoration: underline; color:#0ef; cursor: pointer;" 
+              onclick="window.location.href='#'"
+            >
+            Sign Up
+            </span>
         </div>
       </form>
     </div>
@@ -51,12 +58,22 @@
         <div class="remember">
           <label>
             <input type="checkbox" required>
-            I agree to the <a href="terms-and-conditions.html" target="_blank">Terms & Conditions</a>
+            I agree to the <span 
+                style="text-decoration: underline; color:#0ef; cursor: pointer;" 
+                onclick="window.open('terms-and-conditions.html', '_blank')"
+              >  Terms & Conditions </span>
           </label>
         </div>
         <button type="submit">Sign Up</button>
         <div class="signUp-link">
-          <p>Already have an account? <a href="#" class="signInBtn-link">Log In</a></p>
+          <p>Already have an account? 
+            <span 
+              class="signInBtn-link" 
+              style="text-decoration: underline; color:#0ef; cursor: pointer;" 
+              onclick="window.location.href='#'"
+            >
+              Log In
+            </span>
         </div>
       </form>
     </div>
@@ -66,5 +83,5 @@
 
 {% block jscontent %}
 <!-- Corrected JavaScript file path (removed leading slash and closed the tag properly) -->
-<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user/login.js') }}"></script>
 {% endblock %}

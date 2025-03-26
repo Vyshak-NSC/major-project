@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block csscontent%}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/admin/sensor.css')}}">
+{% endblock %}
+
+{% block content %}
+    <!-- Main Content -->
+    <div class="container">
+        <div class="sensor-management">
+            <h1>Sensor Management</h1>
+
+            <!-- Add Sensor Button -->
+            <button id="add-sensor-btn" class="btn">Add New Sensor</button>
+
+            <!-- Scrollable Sensor List -->
+            <div class="scrollable-sensor-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sensor ID</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sensor-table-body">
+                        <!-- Dynamically populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Sensor Modal -->
+    <div id="sensor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New Sensor</h2>
+            <form id="sensor-form">
+                <input type="hidden" id="sensor-index" />
+                <label for="sensor-id">Sensor ID:</label>
+                <input type="text" id="sensor-id" name="sensor-id" required />
+
+                <label for="location">Location:</label>
+                <input type="text" id="location" name="location" required />
+
+                <label for="coordinates">Coordinates:</label>
+                <input type="text" id="coordinates" name="coordinates" placeholder="Latitude, Longitude" required />
+
+                <label for="status">Status:</label>
+                <select id="status" name="status" required>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="3"></textarea>
+
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sensor Details Modal -->
+    <div id="sensor-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Sensor Details</h2>
+            <div id="sensor-details">
+                <p><strong>Sensor ID:</strong> <span id="details-id"></span></p>
+                <p><strong>Location:</strong> <span id="details-location"></span></p>
+                <p><strong>Coordinates:</strong> <span id="details-coordinates"></span></p>
+                <p><strong>Status:</strong> <span id="details-status"></span></p>
+                <p><strong>Description:</strong> <span id="details-description"></span></p>
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}
+
+    {% block jscontent %}
+        <script src="{{ url_for('static', filename='js/admin/sensor.js') }}"></script>
+    {% endblock %}
+    

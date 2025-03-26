@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  fetch('/camp_manager/get_camp_details')
+  fetch('/local_auth/get_camp_details')
     .then(response => response.json())
     .then(data => {
       if (!data) return;
