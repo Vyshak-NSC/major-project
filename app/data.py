@@ -1,26 +1,40 @@
-from faker import Faker
 import json
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score, f1_score
 import datetime
 import time
 import os
+from collections import defaultdict
+import logging
+import math
+from typing import Dict, List, Optional
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-# Initialize Faker instance
-fake = Faker()
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app/static/data/sensor_service.log'),
+        logging.StreamHandler()
+    ]
+)
 
 # Label Encoders for soil types and sensors
 label_encoder = LabelEncoder()
 soil_types_categories = ['clay', 'sand', 'loam', 'silt']
 label_encoder.fit(soil_types_categories)
-sensor_label_encoder = LabelEncoder()
-sensors = ['Sensor 1', 'Sensor 2']
-sensor_label_encoder.fit(sensors)
 
-# Soil-specific thresholds
+# Historical data storage
+historical_data = defaultdict(list)
+MAX_HISTORY_SIZE = 1000  # Store last 1000 readings per sensor
+
+# Soil-specific thresholds with enhanced values
 soil_thresholds = {
     'clay': {
         'rainfall_high': 180,
@@ -30,7 +44,10 @@ soil_thresholds = {
         'slope_high': 30,
         'slope_medium': 22,
         'seismic_activity_high': 5.5,
-        'seismic_activity_medium': 4.5
+        'seismic_activity_medium': 4.5,
+        'cohesion': 20,
+        'friction_angle': 20,
+        'density': 1800
     },
     'sand': {
         'rainfall_high': 250,
@@ -40,7 +57,10 @@ soil_thresholds = {
         'slope_high': 40,
         'slope_medium': 32,
         'seismic_activity_high': 6.5,
-        'seismic_activity_medium': 5.5
+        'seismic_activity_medium': 5.5,
+        'cohesion': 0,
+        'friction_angle': 35,
+        'density': 1600
     },
     'loam': {
         'rainfall_high': 220,
@@ -50,7 +70,10 @@ soil_thresholds = {
         'slope_high': 35,
         'slope_medium': 28,
         'seismic_activity_high': 6.0,
-        'seismic_activity_medium': 5
+        'seismic_activity_medium': 5,
+        'cohesion': 10,
+        'friction_angle': 30,
+        'density': 1700
     },
     'silt': {
         'rainfall_high': 200,
@@ -60,160 +83,170 @@ soil_thresholds = {
         'slope_high': 32,
         'slope_medium': 28,
         'seismic_activity_high': 5.8,
-        'seismic_activity_medium': 4.5
+        'seismic_activity_medium': 4.5,
+        'cohesion': 15,
+        'friction_angle': 25,
+        'density': 1700
     }
 }
 
 def generate_rainfall():
-    """
-    Generate rainfall value aligned with global standards.
-    Example: High-risk rainfall is 150–200 mm/day, medium-risk is 80–150 mm/day.
-    """
-    # Use a normal distribution centered around 100 mm with a standard deviation of 40 mm
+    """Generate rainfall value aligned with global standards."""
     rainfall = np.random.normal(loc=100, scale=40)
-    # Ensure rainfall is within realistic bounds (0–200 mm)
-    return max(0, min(200, round(rainfall, 2)))
+    return max(0, min(300, round(rainfall, 2)))
 
 def generate_forecasted_rainfall():
-    """
-    Generate forecasted rainfall value aligned with global standards.
-    Example: High-risk forecasted rainfall is 100–150 mm/day, medium-risk is 50–100 mm/day.
-    """
-    # Use a normal distribution centered around 75 mm with a standard deviation of 30 mm
+    """Generate forecasted rainfall value aligned with global standards."""
     forecasted_rainfall = np.random.normal(loc=75, scale=30)
-    # Ensure forecasted rainfall is within realistic bounds (0–150 mm)
-    return max(0, min(150, round(forecasted_rainfall, 2)))
+    return max(0, min(200, round(forecasted_rainfall, 2)))
 
 def generate_soil_saturation(soil_type):
-    """
-    Generate soil saturation value based on soil type and global standards.
-    Example: Clay soils fail at 80–90%, sand soils at 70–80%.
-    """
+    """Generate soil saturation value based on soil type and global standards."""
     if soil_type == "clay":
-        # Clay soils saturate at 80–90%
         return round(np.random.uniform(50, 60), 2)
     elif soil_type == "sand":
-        # Sand soils saturate at 70–80%
         return round(np.random.uniform(60, 75), 2)
     elif soil_type == "loam":
-        # Loam soils saturate at 75–85%
         return round(np.random.uniform(45, 55), 2)
     elif soil_type == "silt":
-        # Silt soils saturate at 70–80%
         return round(np.random.uniform(55, 65), 2)
     else:
-        # Default to 60–90% for unknown soil types
         return round(np.random.uniform(60, 90), 2)  
 
 def generate_slope():
-    """
-    Generate slope value aligned with global standards.
-    Example: Slopes >30° are high-risk, 20–30° are medium-risk.
-    """
-    # Use a normal distribution centered around 25° with a standard deviation of 10°
+    """Generate slope value aligned with global standards."""
     slope = np.random.normal(loc=25, scale=10)
-    # Ensure slope is within realistic bounds (0–50°)
-    return max(0, min(50, round(slope, 2)))
+    return max(0, min(90, round(slope, 2)))
 
 def generate_seismic_activity():
-    """
-    Generate seismic activity value aligned with global standards.
-    Example: Magnitude 6.0+ is high-risk, 4.5–6.0 is medium-risk.
-    """
-    # Use a normal distribution centered around 3.0 with a standard deviation of 2.0
+    """Generate seismic activity value aligned with global standards."""
     seismic_activity = np.random.normal(loc=3.0, scale=2.0)
-    # Ensure seismic activity is within realistic bounds (0–10)
     return max(0, min(10, round(seismic_activity, 2)))
 
-def generate_soil_type():
-    """Generate soil type using Faker."""
-    return fake.random_element(elements=('clay', 'sand', 'loam', 'silt'))
-
-def preprocess_data(data):
-    """Normalize features for better model performance."""
-    scaler = MinMaxScaler()
-    features = ['rainfall', 'forecasted_rainfall', 'soil_saturation', 'slope', 'seismic_activity']
-    data[features] = scaler.fit_transform(data[features])
-    return data
-
-def train_model(data):
-    """
-    Train a Random Forest Classifier with hyperparameter tuning.
-    """
-    data['soil_type'] = label_encoder.transform(data['soil_type'])
-    data['sensor'] = sensor_label_encoder.transform(data['sensor'])
-    X = data[['rainfall', 'forecasted_rainfall', 'soil_saturation', 'slope', 'seismic_activity', 'soil_type', 'sensor']]
-    y = data['landslide']
-    # Define parameter grid for hyperparameter tuning
-    param_grid = {
-        'n_estimators': [100, 200],
-        'max_depth': [10, 20, None],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2]
+def calculate_soil_stability(soil_data):
+    """Calculate soil stability using advanced soil mechanics principles."""
+    cohesion = round(soil_data.get('cohesion', 0), 2)
+    friction_angle = round(soil_data.get('friction_angle', 0), 2)
+    effective_stress = round(soil_data.get('effective_stress', 0), 2)
+    pore_pressure = round(soil_data.get('pore_pressure', 0), 2)
+    soil_density = round(soil_data.get('soil_density', 0), 2)
+    void_ratio = round(soil_data.get('void_ratio', 0), 2)
+    
+    shear_strength = round((cohesion + (effective_stress - pore_pressure) * math.tan(math.radians(friction_angle))), 2)
+    shear_stress = round(soil_data.get('shear_stress', 1), 2)
+    slope_angle = round(soil_data.get('slope_angle', 0), 2)
+    gravity = 9.81
+    
+    driving_force = round(soil_density * gravity * math.sin(math.radians(slope_angle)), 2)
+    resisting_force = round(shear_strength * math.cos(math.radians(slope_angle)), 2)
+    
+    factor_of_safety = round(resisting_force / driving_force if driving_force > 0 else float('inf'), 2)
+    
+    stability_index = round(min(1.0, (
+        (factor_of_safety / 2.0) *
+        (1 - (pore_pressure / effective_stress)) *
+        (1 - (void_ratio / 1.5))
+    )), 2)
+    
+    return {
+        'shear_strength': shear_strength,
+        'factor_of_safety': factor_of_safety,
+        'stability_index': stability_index,
+        'driving_force': driving_force,
+        'resisting_force': resisting_force,
+        'pore_pressure_ratio': round(pore_pressure / effective_stress if effective_stress > 0 else 0, 2)
     }
-    # Perform Grid Search for best parameters
-    rf = RandomForestClassifier(random_state=42)
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3, n_jobs=-1, scoring='accuracy')
-    grid_search.fit(X, y)
-    print("Best Parameters:", grid_search.best_params_)
-    return grid_search.best_estimator_
 
-def generate_time_series_data(n_timestamps=100, time_interval_seconds=3600, sensor="Sensor 1", start_time=None):
-    """
-    Generate synthetic time-series data for landslide prediction using Faker.
-    """
-    if start_time is None:
-        start_time = datetime.datetime.now()
+def analyze_trends(sensor_id: str, metric: str) -> Dict:
+    """Analyze trends in historical data for a specific metric."""
+    if not historical_data[sensor_id]:
+        return {"trend": "stable", "change_rate": 0, "volatility": 0}
     
-    # Generate timestamps
-    timestamps = pd.date_range(start=start_time, periods=n_timestamps, freq=f'{time_interval_seconds}s')
+    values = [data[metric] for data in historical_data[sensor_id]]
+    if len(values) < 2:
+        return {"trend": "stable", "change_rate": 0, "volatility": 0}
     
-    # Generate rainfall and forecasted rainfall
-    rainfall = [generate_rainfall() for _ in range(n_timestamps)]
-    forecasted_rainfall = [generate_forecasted_rainfall() for _ in range(n_timestamps)]
+    # Calculate trend
+    slope = np.polyfit(range(len(values)), values, 1)[0]
+    change_rate = slope / np.mean(values) if np.mean(values) != 0 else 0
     
-    # Generate soil type (constant for the entire time series)
-    soil_type = generate_soil_type()
+    # Calculate volatility
+    volatility = np.std(values) / np.mean(values) if np.mean(values) != 0 else 0
     
-    # Generate soil saturation based on soil type
-    soil_saturation = [generate_soil_saturation(soil_type) for _ in range(n_timestamps)]
-    
-    # Generate slope and seismic activity
-    slope = [generate_slope() for _ in range(n_timestamps)]
-    seismic_activity = [generate_seismic_activity() for _ in range(n_timestamps)]
-    
-    # Create DataFrame
-    df = pd.DataFrame({
-        'timestamp': timestamps,
-        'rainfall': rainfall,
-        'forecasted_rainfall': forecasted_rainfall,
-        'soil_saturation': soil_saturation,
-        'slope': slope,
-        'seismic_activity': seismic_activity,
-        'soil_type': soil_type,  # Constant soil type for the entire time series
-        'sensor': sensor
-    })
-    
-    # Determine landslide risk based on thresholds
-    df['landslide'] = ((df['rainfall'] + df['forecasted_rainfall'] > 150) & (df['soil_saturation'] > 60)) | \
-                      ((df['slope'] > 30) & (df['rainfall'] > 100)) | (df['seismic_activity'] > 6)
-    df['landslide'] = df['landslide'].astype(int)
-    
-    return df
+    return {
+        "trend": "increasing" if change_rate > 0.1 else "decreasing" if change_rate < -0.1 else "stable",
+        "change_rate": round(change_rate, 3),
+        "volatility": round(volatility, 3)
+    }
 
-def calculate_status_and_risk(sensor):
-    """
-    Determine the status, risk level, and affected radius based on sensor data.
-    """
-    rainfall = sensor["rainfall"]
-    forecasted_rainfall = sensor["forecasted_rainfall"]
-    soil_saturation = sensor["soil_saturation"]
-    slope = sensor["slope"]
-    seismic_activity = sensor["seismic_activity"]
-    soil_type = sensor["soil_type"]
+def validate_sensor_data(data: Dict) -> bool:
+    """Validate sensor data against expected ranges and types."""
+    try:
+        required_fields = ['id', 'name', 'latitude', 'longitude', 'soil_type', 'rainfall', 
+                         'soil_saturation', 'slope', 'seismic_activity']
+        
+        # Check required fields
+        if not all(field in data for field in required_fields):
+            logging.error(f"Missing required fields in sensor data: {data}")
+            return False
+            
+        # Validate numeric ranges
+        if not (0 <= data['rainfall'] <= 300):
+            logging.error(f"Invalid rainfall value: {data['rainfall']}")
+            return False
+            
+        if not (0 <= data['soil_saturation'] <= 100):
+            logging.error(f"Invalid soil saturation value: {data['soil_saturation']}")
+            return False
+            
+        if not (0 <= data['slope'] <= 90):
+            logging.error(f"Invalid slope value: {data['slope']}")
+            return False
+            
+        if not (0 <= data['seismic_activity'] <= 10):
+            logging.error(f"Invalid seismic activity value: {data['seismic_activity']}")
+            return False
+            
+        # Validate coordinates
+        if not (-90 <= data['latitude'] <= 90):
+            logging.error(f"Invalid latitude value: {data['latitude']}")
+            return False
+            
+        if not (-180 <= data['longitude'] <= 180):
+            logging.error(f"Invalid longitude value: {data['longitude']}")
+            return False
+            
+        return True
+    except Exception as e:
+        logging.error(f"Error validating sensor data: {str(e)}")
+        return False
 
-    # Get thresholds for the specific soil type
-    thresholds = soil_thresholds.get(soil_type, soil_thresholds['clay'])  # Default to 'clay' if unknown
+def calculate_status_and_risk(sensor_data):
+    """Determine the status, risk level, and affected radius based on sensor data."""
+    rainfall = sensor_data["rainfall"]
+    forecasted_rainfall = sensor_data["forecasted_rainfall"]
+    soil_saturation = sensor_data["soil_saturation"]
+    slope = sensor_data["slope"]
+    seismic_activity = sensor_data["seismic_activity"]
+    soil_type = sensor_data["soil_type"]
+
+    thresholds = soil_thresholds.get(soil_type, soil_thresholds['clay'])
+
+    # Analyze trends
+    trends = {
+        'rainfall': analyze_trends(sensor_data['id'], 'rainfall'),
+        'soil_saturation': analyze_trends(sensor_data['id'], 'soil_saturation'),
+        'slope': analyze_trends(sensor_data['id'], 'slope'),
+        'seismic_activity': analyze_trends(sensor_data['id'], 'seismic_activity')
+    }
+
+    # Adjust risk based on trends
+    trend_risk_multiplier = 1.0
+    for trend in trends.values():
+        if trend['trend'] == 'increasing' and trend['change_rate'] > 0.2:
+            trend_risk_multiplier *= 1.2
+        elif trend['trend'] == 'decreasing' and trend['change_rate'] < -0.2:
+            trend_risk_multiplier *= 0.8
 
     if (rainfall > thresholds['rainfall_high'] or 
         soil_saturation > thresholds['soil_saturation_high'] or 
@@ -221,171 +254,338 @@ def calculate_status_and_risk(sensor):
         seismic_activity > thresholds['seismic_activity_high']):
         status = "Alert"
         risk = "High"
-        affected_radius = np.random.randint(5000, 10000)  # 5–10 km
+        affected_radius = int(np.random.randint(5000, 10000) * trend_risk_multiplier)
     elif (thresholds['rainfall_medium'] <= rainfall <= thresholds['rainfall_high'] or 
           thresholds['soil_saturation_medium'] <= soil_saturation <= thresholds['soil_saturation_high'] or 
           thresholds['slope_medium'] <= slope <= thresholds['slope_high'] or 
           thresholds['seismic_activity_medium'] <= seismic_activity <= thresholds['seismic_activity_high']):
         status = "Warning"
         risk = "Medium"
-        affected_radius = np.random.randint(1000, 5000)  # 1–5 km
+        affected_radius = int(np.random.randint(1000, 5000) * trend_risk_multiplier)
     else:
         status = "Normal"
         risk = "Low"
         affected_radius = 0
-    return status, risk, affected_radius
 
-def calculate_landslide_time(sensor):
-    """
-    Calculate the approximate time of a landslide based on sensor data.
-    Incorporates soil type, dynamic risk levels, and environmental conditions.
-    Ensures the predicted time is at least a week (or more) in the future.
-    """
-    # Extract relevant sensor data
-    status = sensor["status"]
-    soil_type = sensor["soil_type"]
-    rainfall = sensor["rainfall"]
-    forecasted_rainfall = sensor["forecasted_rainfall"]
-    soil_saturation = sensor["soil_saturation"]
-    slope = sensor["slope"]
-    seismic_activity = sensor["seismic_activity"]
+    return status, risk, affected_radius, trends
 
-    # Soil-specific base time offsets (in days)
-    soil_time_offsets = {
-        'clay': {'Alert': 7, 'Warning': 14},
-        'sand': {'Alert': 5, 'Warning': 10},
-        'loam': {'Alert': 6, 'Warning': 12},
-        'silt': {'Alert': 6, 'Warning': 13}
+def calculate_landslide_time(sensor_data):
+    """Calculate the approximate time of a landslide using a sophisticated prediction model."""
+    soil_type = sensor_data["soil_type"]
+    rainfall = sensor_data["rainfall"]
+    soil_saturation = sensor_data["soil_saturation"]
+    slope = sensor_data["slope"]
+    seismic_activity = sensor_data["seismic_activity"]
+    current_time = datetime.datetime.now()
+
+    # Analyze trends
+    trends = {
+        'rainfall': analyze_trends(sensor_data['id'], 'rainfall'),
+        'soil_saturation': analyze_trends(sensor_data['id'], 'soil_saturation'),
+        'slope': analyze_trends(sensor_data['id'], 'slope'),
+        'seismic_activity': analyze_trends(sensor_data['id'], 'seismic_activity')
     }
 
-    if status == "Normal":
-        return None  # No prediction for normal conditions
+    # Adjust prediction based on trends
+    trend_adjustment = 1.0
+    for trend in trends.values():
+        if trend['trend'] == 'increasing' and trend['change_rate'] > 0.2:
+            trend_adjustment *= 0.8  # Reduce prediction time for increasing trends
+        elif trend['trend'] == 'decreasing' and trend['change_rate'] < -0.2:
+            trend_adjustment *= 1.2  # Increase prediction time for decreasing trends
 
-    # Base prediction range based on soil type and status
-    base_offset = soil_time_offsets.get(soil_type, soil_time_offsets['clay'])[status]
-
-    # Adjust prediction based on environmental factors
-    if status == "Alert":
-        # Higher rainfall or seismic activity reduces the time to landslide
-        time_adjustment = max(
-            0,
-            -int(rainfall / 20)  # Reduce 1 day for every 20 mm of rainfall
-            - int(forecasted_rainfall / 30)  # Reduce 1 day for every 30 mm of forecasted rainfall
-            - int(soil_saturation / 20)  # Reduce 1 day for every 20% soil saturation
-            - int(seismic_activity * 2)  # Reduce 2 days for every unit of seismic activity
-        )
-        min_days = max(7, base_offset + time_adjustment)  # Ensure at least 7 days
-        max_days = min_days + np.random.randint(3, 8)  # Add variability (3–7 days)
-    elif status == "Warning":
-        # Moderate conditions allow for a longer prediction window
-        time_adjustment = max(
-            0,
-            -int(rainfall / 30)  # Reduce 1 day for every 30 mm of rainfall
-            - int(forecasted_rainfall / 40)  # Reduce 1 day for every 40 mm of forecasted rainfall
-            - int(soil_saturation / 25)  # Reduce 1 day for every 25% soil saturation
-            - int(seismic_activity * 1.5)  # Reduce 1.5 days for every unit of seismic activity
-        )
-        min_days = max(14, base_offset + time_adjustment)  # Ensure at least 14 days
-        max_days = min_days + np.random.randint(5, 10)  # Add variability (5–9 days)
-
-    # Return a random prediction within the adjusted range
-    return datetime.timedelta(days=np.random.randint(min_days, max_days))
-def generate_sensor_data():
-    """
-    Generate real-time sensor data.
-    """
-    sensors = [
-        {
-            "id": 1,
-            "lat": 11.921062,
-            "lng": 75.355452, 
-            "label": "Sensor 1: Unknown, India",
-            "rainfall": generate_rainfall(),
-            "forecasted_rainfall": generate_forecasted_rainfall(),
-            "soil_type": fake.random_element(elements=('clay', 'sand', 'loam', 'silt')),  # Generate soil type
-            "soil_saturation": None,  # Placeholder for soil saturation
-            "slope": generate_slope(),
-            "seismic_activity": generate_seismic_activity(),
-            "status": "Normal",
-            "risk": "Low",
-            "affectedRadius": 0,
-            "sensor": "Sensor 1",
-            "predicted_landslide_time": None
-        },
-        {
-            "id": 2,
-            "lat": 11.695785, 
-            "lng": 76.031938,
-            "label": "Sensor 2: Wayanad, Kerala",
-            "rainfall": generate_rainfall(),
-            "forecasted_rainfall": generate_forecasted_rainfall(),
-            "soil_type": fake.random_element(elements=('clay', 'sand', 'loam', 'silt')),  # Generate soil type
-            "soil_saturation": None,  # Placeholder for soil saturation
-            "slope": generate_slope(),
-            "seismic_activity": generate_seismic_activity(),
-            "status": "Normal",
-            "risk": "Low",
-            "affectedRadius": 0,
-            "sensor": "Sensor 2",
-            "predicted_landslide_time": None
-        }
-    ]
-    # Populate soil saturation based on soil type
-    for sensor in sensors:
-        sensor["soil_saturation"] = generate_soil_saturation(sensor["soil_type"])
-    
-    # Calculate status, risk, and affected radius for each sensor
-    for sensor in sensors:
-        status, risk, affected_radius = calculate_status_and_risk(sensor)
-        sensor["status"] = status
-        sensor["risk"] = risk
-        sensor["affectedRadius"] = affected_radius
-    
-    # Calculate predicted landslide time for sensors with non-normal status
-    for sensor in sensors:
-        if sensor["status"] != "Normal":
-            time_offset = calculate_landslide_time(sensor)
-            if time_offset:
-                approx_time = datetime.datetime.now() + time_offset
-                approx_time_str = approx_time.strftime('%d-%m-%Y %I:%M %p')
-                sensor["predicted_landslide_time"] = approx_time_str
+    # Calculate status first
+    if (rainfall > soil_thresholds[soil_type]['rainfall_high'] or 
+        soil_saturation > soil_thresholds[soil_type]['soil_saturation_high'] or 
+        slope > soil_thresholds[soil_type]['slope_high'] or 
+        seismic_activity > soil_thresholds[soil_type]['seismic_activity_high']):
+        # High risk conditions
+        if rainfall > soil_thresholds[soil_type]['rainfall_high'] and soil_saturation > soil_thresholds[soil_type]['soil_saturation_high']:
+            predicted_time = current_time + datetime.timedelta(hours=int(1 * trend_adjustment))
+            return f"Immediate - Expected at {predicted_time.strftime('%d-%m-%Y %I:%M %p')}"
+        elif slope > soil_thresholds[soil_type]['slope_high'] and seismic_activity > soil_thresholds[soil_type]['seismic_activity_high']:
+            predicted_time = current_time + datetime.timedelta(hours=int(24 * trend_adjustment))
+            return f"Within 24 hours - Expected at {predicted_time.strftime('%d-%m-%Y %I:%M %p')}"
         else:
-            sensor["predicted_landslide_time"] = None
+            predicted_time = current_time + datetime.timedelta(hours=int(48 * trend_adjustment))
+            return f"Within 48 hours - Expected at {predicted_time.strftime('%d-%m-%Y %I:%M %p')}"
+    elif (soil_thresholds[soil_type]['rainfall_medium'] <= rainfall <= soil_thresholds[soil_type]['rainfall_high'] or 
+          soil_thresholds[soil_type]['soil_saturation_medium'] <= soil_saturation <= soil_thresholds[soil_type]['soil_saturation_high'] or 
+          soil_thresholds[soil_type]['slope_medium'] <= slope <= soil_thresholds[soil_type]['slope_high'] or 
+          soil_thresholds[soil_type]['seismic_activity_medium'] <= seismic_activity <= soil_thresholds[soil_type]['seismic_activity_high']):
+        # Medium risk conditions
+        if rainfall > soil_thresholds[soil_type]['rainfall_medium'] and soil_saturation > soil_thresholds[soil_type]['soil_saturation_medium']:
+            predicted_time = current_time + datetime.timedelta(hours=int(72 * trend_adjustment))
+            return f"Within 72 hours - Expected at {predicted_time.strftime('%d-%m-%Y %I:%M %p')}"
+        else:
+            predicted_time = current_time + datetime.timedelta(days=int(7 * trend_adjustment))
+            return f"Within 1 week - Expected at {predicted_time.strftime('%d-%m-%Y %I:%M %p')}"
+    else:
+        # Low risk conditions
+        return "No immediate risk - Monitoring continues"
+
+def generate_sensor_data(sensor_config):
+    """Generate sensor data based on sensor configuration."""
+    current_time = datetime.datetime.now()
     
-    return sensors
-def save_sensor_data_to_json(sensors):
-    """
-    Save sensor data to a JSON file inside the 'app/static' folder.
-    """
-    static_folder_path = "app/static"
-    os.makedirs(static_folder_path, exist_ok=True)  # Ensure the folder exists
-    file_path = os.path.join(static_folder_path, "sensor_data.json")
+    # Generate sensor readings
+    rainfall = generate_rainfall()
+    forecasted_rainfall = generate_forecasted_rainfall()
+    soil_saturation = generate_soil_saturation(sensor_config['soil_type'])
+    slope = generate_slope()
+    seismic_activity = generate_seismic_activity()
     
-    with open(file_path, "w") as file:
-        json.dump(sensors, file, indent=4)
+    # Create sensor data dictionary
+    sensor_data = {
+        "id": sensor_config['id'],
+        "name": sensor_config['name'],
+        "latitude": sensor_config['latitude'],
+        "longitude": sensor_config['longitude'],
+        "soil_type": sensor_config['soil_type'],
+        "timestamp": current_time.isoformat(),
+        "rainfall": rainfall,
+        "forecasted_rainfall": forecasted_rainfall,
+        "soil_saturation": soil_saturation,
+        "slope": slope,
+        "seismic_activity": seismic_activity
+    }
     
-    print(f"Sensor data saved to {file_path}")
+    # Validate data
+    if not validate_sensor_data(sensor_data):
+        logging.error(f"Invalid sensor data generated for sensor {sensor_config['id']}")
+        return None
+    
+    # Calculate status and risk
+    status, risk, affected_radius, trends = calculate_status_and_risk(sensor_data)
+    
+    # Calculate soil stability
+    soil_data = {
+        'cohesion': soil_thresholds[sensor_config['soil_type']]['cohesion'],
+        'friction_angle': soil_thresholds[sensor_config['soil_type']]['friction_angle'],
+        'effective_stress': calculate_effective_stress(sensor_config['soil_type'], soil_saturation),
+        'pore_pressure': calculate_pore_pressure(soil_saturation),
+        'soil_density': soil_thresholds[sensor_config['soil_type']]['density'],
+        'void_ratio': calculate_void_ratio(sensor_config['soil_type'], soil_saturation),
+        'shear_stress': calculate_shear_stress(slope, soil_saturation),
+        'slope_angle': slope
+    }
+    
+    stability = calculate_soil_stability(soil_data)
+    
+    sensor_data.update({
+        "status": status,
+        "risk_level": risk,
+        "affected_radius": affected_radius,
+        "predicted_landslide_time": calculate_landslide_time(sensor_data),
+        "trends": trends,
+        "soil_stability": stability
+    })
+    
+    # Update historical data
+    historical_data[sensor_config['id']].append(sensor_data)
+    if len(historical_data[sensor_config['id']]) > MAX_HISTORY_SIZE:
+        historical_data[sensor_config['id']].pop(0)
+    
+    return sensor_data
+
+def calculate_effective_stress(soil_type, soil_saturation):
+    """Calculate effective stress based on soil type and saturation."""
+    unit_weights = {
+        'clay': 18,
+        'sand': 16,
+        'loam': 17,
+        'silt': 17
+    }
+    
+    depth = 1
+    unit_weight = unit_weights.get(soil_type, 17)
+    total_stress = unit_weight * depth
+    saturation_factor = soil_saturation / 100
+    effective_stress = total_stress * (1 - saturation_factor)
+    
+    return effective_stress
+
+def calculate_pore_pressure(soil_saturation):
+    """Calculate pore water pressure based on saturation."""
+    return soil_saturation * 0.1
+
+def calculate_void_ratio(soil_type, soil_saturation):
+    """Calculate void ratio based on soil type and saturation."""
+    base_void_ratios = {
+        'clay': 0.8,
+        'sand': 0.6,
+        'loam': 0.7,
+        'silt': 0.7
+    }
+    
+    saturation_factor = soil_saturation / 100
+    void_ratio = base_void_ratios.get(soil_type, 0.7) * (1 + saturation_factor)
+    
+    return void_ratio
+
+def calculate_shear_stress(slope, soil_saturation):
+    """Calculate shear stress based on slope and saturation."""
+    return (slope / 45) * (soil_saturation / 100) * 100
+
+def save_sensor_data_to_json(sensors_data):
+    """Save sensor data to a JSON file."""
+    output_file = os.path.join('app', 'static', 'data', 'sensor_data.json')
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    
+    with open(output_file, 'w') as f:
+        json.dump(sensors_data, f, indent=4)
+
+def load_sensor_configs():
+    """Load sensor configurations from JSON file."""
+    config_file = os.path.join('app', 'static', 'data', 'sensor_configs.json')
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_sensor_configs(configs):
+    """Save sensor configurations to JSON file."""
+    config_file = os.path.join('app', 'static', 'data', 'sensor_configs.json')
+    os.makedirs(os.path.dirname(config_file), exist_ok=True)
+    
+    with open(config_file, 'w') as f:
+        json.dump(configs, f, indent=4)
+
+def save_historical_data():
+    """Save historical data to a JSON file."""
+    output_file = os.path.join('app', 'static', 'data', 'historical_data.json')
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    
+    serializable_data = {}
+    for sensor_id, data in historical_data.items():
+        serializable_data[sensor_id] = data
+    
+    with open(output_file, 'w') as f:
+        json.dump(serializable_data, f, indent=4)
+
+def load_historical_data():
+    """Load historical data from JSON file."""
+    input_file = os.path.join('app', 'static', 'data', 'historical_data.json')
+    if os.path.exists(input_file):
+        with open(input_file, 'r') as f:
+            data = json.load(f)
+            for sensor_id, sensor_data in data.items():
+                historical_data[sensor_id] = sensor_data
+
+def calculate_confusion_matrix(y_true, y_pred):
+    """Calculate and visualize confusion matrix."""
+    cm = confusion_matrix(y_true, y_pred)
+    
+    # Calculate metrics
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average='weighted')
+    recall = recall_score(y_true, y_pred, average='weighted')
+    f1 = f1_score(y_true, y_pred, average='weighted')
+    
+    # Create classification report
+    report = classification_report(y_true, y_pred)
+    
+    # Calculate percentages for confusion matrix
+    cm_percentage = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    
+    # Create visualization
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(cm_percentage, annot=True, fmt='.2%', cmap='Blues',
+                xticklabels=['No Landslide', 'Landslide'],
+                yticklabels=['No Landslide', 'Landslide'])
+    plt.title('Confusion Matrix (Percentage)')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    
+    # Save the plot
+    plt.savefig('app/static/data/confusion_matrix.png')
+    plt.close()
+    
+    return {
+        'matrix': cm.tolist(),
+        'matrix_percentage': cm_percentage.tolist(),
+        'metrics': {
+            'accuracy': round(accuracy, 4),
+            'precision': round(precision, 4),
+            'recall': round(recall, 4),
+            'f1_score': round(f1, 4)
+        },
+        'report': report
+    }
+
+def evaluate_predictions(historical_data):
+    """Evaluate prediction accuracy using historical data."""
+    # Prepare data
+    y_true = []
+    y_pred = []
+    
+    for sensor_id, data in historical_data.items():
+        for reading in data:
+            # True label (actual landslide occurrence)
+            true_label = 1 if reading.get('status') in ['Alert', 'Warning'] else 0
+            
+            # Predicted label (based on risk assessment)
+            predicted_label = 1 if reading.get('risk_level') in ['High', 'Medium'] else 0
+            
+            y_true.append(true_label)
+            y_pred.append(predicted_label)
+    
+    # Calculate confusion matrix and metrics
+    evaluation = calculate_confusion_matrix(y_true, y_pred)
+    
+    # Save evaluation results
+    output_file = os.path.join('app', 'static', 'data', 'evaluation_results.json')
+    with open(output_file, 'w') as f:
+        json.dump(evaluation, f, indent=4)
+    
+    return evaluation
 
 def main():
-    """
-    Main function to execute the program.
-    """
-    # Generate training data for landslide prediction
-    sensor_1_data = generate_time_series_data(2000, time_interval_seconds=3600, sensor="Sensor 1", start_time=datetime.datetime.now())
-    sensor_2_data = generate_time_series_data(2000, time_interval_seconds=3600, sensor="Sensor 2", start_time=datetime.datetime.now())
-    combined_training_data = pd.concat([sensor_1_data, sensor_2_data], ignore_index=True)
-    # Preprocess data
-    combined_training_data = preprocess_data(combined_training_data)
-    # Train the model
-    model = train_model(combined_training_data)
-    # Real-time monitoring loop
+    """Main function to continuously generate and save sensor data."""
+    logging.info("Starting sensor data generation service...")
+    
+    # Load historical data
+    load_historical_data()
+    
+    # Run initial evaluation
+    evaluation = evaluate_predictions(historical_data)
+    logging.info(f"Initial prediction evaluation results: {evaluation['metrics']}")
+    
     while True:
-        # Generate synthetic sensor data
-        sensors = generate_sensor_data()
-        # Save sensor data to JSON
-        save_sensor_data_to_json(sensors)
-        # Wait for 1 minute before updating the data again
-        print("Waiting for 1 minute before next update...")
+        try:
+            # Load sensor configurations
+            sensor_configs = load_sensor_configs()
+            
+            # Generate data for each sensor
+            sensors_data = []
+            for config in sensor_configs:
+                sensor_data = generate_sensor_data(config)
+                if sensor_data:
+                    sensors_data.append(sensor_data)
+                    logging.info(f"Generated data for sensor {config['id']}: {sensor_data['status']} - {sensor_data['risk_level']}")
+            
+            # Save the generated data
+            save_sensor_data_to_json(sensors_data)
+            save_historical_data()
+            
+            # Evaluate predictions every 5 minutes
+            current_time = datetime.datetime.now()
+            if current_time.minute % 5 == 0:  # Run every 5 minutes
+                evaluation = evaluate_predictions(historical_data)
+                logging.info(f"Prediction evaluation results: {evaluation['metrics']}")
+                logging.info(f"Confusion Matrix: {evaluation['matrix']}")
+                logging.info(f"Classification Report: {evaluation['report']}")
+            
+            # Print timestamp for monitoring
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            logging.info(f"Sensor data updated at {current_time}")
+            
+            # Wait for 1 minute before next update
+            time.sleep(60)
+            
+        except Exception as e:
+            logging.error(f"Error updating sensor data: {str(e)}")
+            # Wait for 1 minute before retrying
         time.sleep(60)
 
 if __name__ == "__main__":

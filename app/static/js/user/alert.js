@@ -1,43 +1,62 @@
-// Function to calculate distance between two coordinates (in km)
+let map; // Make map variable global
+let alertSound; // Make alertSound global
+
+// Cache DOM elements
+const mapElement = document.getElementById('map');
+const sensorTableBody = document.getElementById('sensor-table-body');
+const alertBox = document.getElementById('alert-box');
+const routeInfo = document.getElementById('route-info');
+
+// Cache map layers
+let normalLayer;
+let satelliteLayer;
+let userLocationCircle;
+let blueDot;
+
+// Cache sensor data
+let lastSensorData = null;
+let lastDataHash = null;
+
+// Optimized distance calculation
 function calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371; // Radius of the Earth in km
+    const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLng = (lng2 - lng1) * (Math.PI / 180);
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
+    const lat1Rad = lat1 * (Math.PI / 180);
+    const lat2Rad = lat2 * (Math.PI / 180);
+    
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.sin(dLng/2) * Math.sin(dLng/2) * Math.cos(lat1Rad) * Math.cos(lat2Rad);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
 }
 
-let lastDatahash = null;
-// Fetch sensor data from JSON file
+// Optimized sensor data fetching with caching
 async function fetchSensorData() {
     try {
-        const response = await fetch("/static/sensor_data.json");
-        if (!response.ok) {
-            throw new Error("Failed to fetch sensor data");
+        const response = await fetch("/static/data/sensor_data.json");
+        if (!response.ok) throw new Error("Failed to fetch sensor data");
+        
+        const data = await response.json();
+        const dataHash = JSON.stringify(data);
+        
+        // Only update if data has changed
+        if (dataHash !== lastDataHash) {
+            lastDataHash = dataHash;
+            lastSensorData = data;
+            return data;
         }
-        return await response.json();
-        // const data = await response.json();
-        // const dataHash = JSON.stringify(data);
-
-        // if(dataHash !== lastDatahash){
-        //     lastDatahash = dataHash;
-        //     location.reload();
-        // }
+        
+        return lastSensorData;
     } catch (error) {
         console.error("Error fetching sensor data:", error);
-        return [];
+        return lastSensorData || [];
     }
 }
-// setInterval(fetchSensorData, 100000)
 
 // Fetch hazardous features near a location using Overpass API
 async function fetchHazardousFeatures(lat, lng, radius = 5) {
-    const overpassUrl = `
-        https://overpass-api.de/api/interpreter?data=
+    const query = `
         [out:json];
         (
             node["natural"="water"](around:${radius * 1000},${lat},${lng});
@@ -54,10 +73,21 @@ async function fetchHazardousFeatures(lat, lng, radius = 5) {
             relation["geological"="hazard"](around:${radius * 1000},${lat},${lng});
         );
         out center;
-    `.replace(/\s+/g, ''); // Remove whitespace for compact URL
+    `;
+
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
     try {
-        const response = await fetch(overpassUrl);
+        const response = await fetch(overpassUrl, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         return data.elements.map(element => {
             if (element.center) {
@@ -66,474 +96,476 @@ async function fetchHazardousFeatures(lat, lng, radius = 5) {
                 return { lat: element.lat, lng: element.lon };
             }
             return null;
-        }).filter(Boolean); // Filter out invalid entries
+        }).filter(Boolean);
     } catch (error) {
         console.error("Error fetching hazardous feature data:", error);
         return [];
     }
 }
 
-// Initialize the map with user's geolocation
+// Optimized map initialization
 async function initMap(position) {
     const userLat = position.coords.latitude;
     const userLng = position.coords.longitude;
-    const accuracy = position.coords.accuracy; // Accuracy in meters
+    const accuracy = position.coords.accuracy;
 
-    // Initialize map centered on user's location
-    const map = L.map('map').setView([userLat, userLng], 15);
+    // Initialize map with optimized settings
+    map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([0, 0], 2);
 
-    // OpenStreetMap standard tiles
-    const normalLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    // Add zoom control to top right
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    // Initialize layers with optimized settings
+    normalLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        updateWhenIdle: true
     }).addTo(map);
 
-    // Esri satellite tiles
-    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; GIS User Community',
+    satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        updateWhenIdle: true
     });
 
-    // Add layer control for switching map views
+    // Add layer control
     L.control.layers({ "Normal View": normalLayer, "Satellite View": satelliteLayer }).addTo(map);
 
-    // Add a blue circle for the user’s location accuracy (PULSATING EFFECT)
-    let userLocationCircle = L.circle([userLat, userLng], {
-        color: '#4285F4', // Google Maps blue
+    // Add user location with optimized styling
+    userLocationCircle = L.circle([userLat, userLng], {
+        color: '#4285F4',
         fillColor: '#4285F4',
-        fillOpacity: 0.3, // Enhanced visibility
+        fillOpacity: 0.3,
         radius: accuracy
     }).addTo(map);
 
-    // Add a solid blue dot at the center (LARGER & BOLDER)
-    let blueDot = L.circleMarker([userLat, userLng], {
-        radius: 8, // Bigger for better visibility
+    blueDot = L.circleMarker([userLat, userLng], {
+        radius: 8,
         color: '#4285F4',
         fillColor: '#4285F4',
         fillOpacity: 1,
-        weight: 2 // Bolder border
+        weight: 2
     }).addTo(map);
 
-    // Animate the circle to create a pulsating effect
-    function animateCircle() {
+    // Add user marker with optimized popup
+    L.marker([userLat, userLng])
+        .addTo(map)
+        .bindPopup(`Your Location<br>Lat: ${userLat.toFixed(6)}<br>Lng: ${userLng.toFixed(6)}`);
+
+    // Optimized circle animation
         let growing = true;
         setInterval(() => {
-            let newRadius = growing ? userLocationCircle.getRadius() * 1.15 : userLocationCircle.getRadius() * 0.85;
-            userLocationCircle.setRadius(newRadius);
+        const currentRadius = userLocationCircle.getRadius();
+        userLocationCircle.setRadius(growing ? currentRadius * 1.15 : currentRadius * 0.85);
             growing = !growing;
-        }, 800); // Adjust speed of animation
-    }
-    animateCircle();
+    }, 800);
 
-    // Add a "Recenter to Geolocation" button
+    // Add recenter button with optimized styling
     const recenterButton = L.Control.extend({
-        options: {
-            position: 'topleft' // Position the button in the top-left corner
-        },
-        onAdd: function () {
-            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control'); // Create a button container
-            container.style.backgroundColor = 'white';
-            container.style.border = '1px solid #ccc';
-            container.style.padding = '5px';
-            container.style.cursor = 'pointer';
-            container.style.borderRadius = '5px';
-
-            // Add an icon or text to the button
-            container.innerHTML = '<span>📍</span>'; // Use a location emoji as the icon
-            container.title = 'Recenter'; // Tooltip for the button
-
-            // Add click event to recenter the map
-            L.DomEvent.on(container, 'click', () => {
-                map.setView([userLat, userLng], 15); // Recenter to user's geolocation
-                
+        options: { position: 'topleft' },
+        onAdd: () => {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            Object.assign(container.style, {
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                padding: '5px',
+                cursor: 'pointer',
+                borderRadius: '5px'
             });
-
+            container.innerHTML = '<span>📍</span>';
+            container.title = 'Recenter';
+            L.DomEvent.on(container, 'click', () => map.setView([userLat, userLng], 15));
             return container;
         }
     });
-
-    // Add the recenter button to the map
     map.addControl(new recenterButton());
 
-    // Fetch sensor data
-    const pinnedLocations = await fetchSensorData();
+    // Initialize sensor data and map
+    await initializeSensorData(userLat, userLng);
+}
 
-    // Add Sensor Markers and Affected Areas
-    pinnedLocations.forEach(location => {
-        const marker = L.marker([location.lat, location.lng]).addTo(map);
+// Optimized sensor data initialization
+async function initializeSensorData(userLat, userLng) {
+    const sensors = await fetchSensorData();
+    const bounds = L.latLngBounds([]);
+
+    // Clear existing markers and circles
+    map.eachLayer((layer) => {
+        if (layer instanceof L.Marker || layer instanceof L.Circle) {
+            map.removeLayer(layer);
+        }
+    });
+
+    // Add sensor markers with optimized rendering
+    sensors.forEach(sensor => {
+        const lat = parseFloat(sensor.latitude);
+        const lng = parseFloat(sensor.longitude);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const marker = L.marker([lat, lng]).addTo(map);
+            bounds.extend([lat, lng]);
+
+            // Optimized popup content
         marker.bindPopup(`
-            ${location.label}<br>
-            Status: ${location.status}<br>
-            Rainfall: ${location.rainfall} mm<br>
-            Soil Saturation: ${location.soil_saturation}%<br>
-            Slope: ${location.slope}°<br>
-            Seismic Activity: ${location.seismic_activity}<br>
-            Soil Type: ${location.soil_type}<br>
-            Risk Level: ${location.risk}<br>
-            Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}
-        `);
+                <strong>${sensor.name}</strong><br>
+                Status: ${sensor.status}<br>
+                Rainfall: ${sensor.rainfall} mm<br>
+                Soil Saturation: ${sensor.soil_saturation}%<br>
+                Slope: ${sensor.slope}°<br>
+                Seismic Activity: ${sensor.seismic_activity}<br>
+                Soil Type: ${sensor.soil_type}<br>
+                Risk Level: ${sensor.risk_level}<br>
+                Predicted Landslide Time: ${sensor.predicted_landslide_time}
+            `);
 
-        // Highlight affected area based on risk level
-        if (location.status === 'Alert') {
-            // High-risk areas remain RED
-            L.circle([location.lat, location.lng], {
-                color: 'red',
-                fillColor: '#f03',
+            // Add affected area with optimized styling
+            if (sensor.status === 'Alert' || sensor.status === 'Warning') {
+                L.circle([lat, lng], {
+                    color: sensor.status === 'Alert' ? 'red' : 'orange',
+                    fillColor: sensor.status === 'Alert' ? '#f03' : '#ffcc00',
                 fillOpacity: 0.5,
-                radius: location.affectedRadius
+                    radius: sensor.affected_radius
             }).addTo(map);
 
-            // Add a flashing danger sign
-            const dangerSign = L.divIcon({
+                if (sensor.status === 'Alert') {
+                    L.marker([lat, lng], {
+                        icon: L.divIcon({
                 className: 'danger-sign',
                 html: '⚠️',
                 iconSize: [30, 30]
+                        })
+            }).addTo(map);
+                }
+            }
+        }
+    });
+
+    // Fit bounds with padding
+    if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        map.setView([userLat, userLng], 15);
+    }
+
+    // Update sensor table with optimized rendering
+    updateSensorTable(sensors);
+
+    // Update alerts with optimized rendering
+    updateAlerts(sensors, userLat, userLng);
+
+    // Calculate evacuation routes after a short delay
+    setTimeout(() => simulateTrafficAndEvacuationRoutes(sensors, userLat, userLng), 1000);
+}
+
+// Optimized sensor table update
+function updateSensorTable(sensors) {
+    sensorTableBody.innerHTML = sensors.map(sensor => `
+        <tr>
+            <td>${sensor.name}</td>
+            <td><span style="color: ${sensor.status === 'Alert' ? 'red' : 
+                               sensor.status === 'Warning' ? 'orange' : 'green'}">${sensor.status}</span></td>
+            <td>${sensor.rainfall}</td>
+            <td>${sensor.forecasted_rainfall}</td>
+            <td>${sensor.soil_saturation}</td>
+            <td>${sensor.slope}</td>
+            <td>${sensor.seismic_activity}</td>
+            <td>${sensor.soil_type}</td>
+            <td>${sensor.risk_level}</td>
+            <td>${sensor.predicted_landslide_time}</td>
+        </tr>
+    `).join('');
+}
+
+// Optimized alerts update
+function updateAlerts(sensors, userLat, userLng) {
+    alertBox.innerHTML = '';
+    
+    sensors.forEach(sensor => {
+        if (sensor.status === 'Alert' || sensor.status === 'Warning') {
+            const distance = calculateDistance(userLat, userLng, sensor.latitude, sensor.longitude);
+        const alertItem = document.createElement('div');
+        alertItem.className = 'alert-item';
+        alertItem.innerHTML = `
+                <p><strong>${sensor.name}</strong></p>
+                <p>Status: ${sensor.status}</p>
+                <p>Predicted Landslide Time: ${sensor.predicted_landslide_time}</p>
+            <p>Distance: ${distance.toFixed(2)} km away</p>
+                <button class="share-alert-btn">Share Alert</button>
+        `;
+        alertBox.appendChild(alertItem);
+    
+            // Add click handler for alert sound
+            alertItem.addEventListener('click', () => {
+                try {
+                    alertSound.play().catch(console.log);
+                } catch (error) {
+                    console.log("Audio play error:", error);
+                }
             });
-            L.marker([location.lat, location.lng], { icon: dangerSign }).addTo(map);
-        } else if (location.status === 'Warning') {
-            // Medium-risk areas are YELLOW
-            L.circle([location.lat, location.lng], {
-                color: 'orange',
-                fillColor: '#ffcc00',
+
+            // Update map view and show popup
+            map.setView([sensor.latitude, sensor.longitude], 12);
+            const marker = L.marker([sensor.latitude, sensor.longitude]).addTo(map);
+        marker.bindPopup(`
+                ${sensor.name}<br>
+                Status: ${sensor.status}<br>
+                Rainfall: ${sensor.rainfall} mm<br>
+                Soil Saturation: ${sensor.soil_saturation}%<br>
+                Slope: ${sensor.slope}°<br>
+                Seismic Activity: ${sensor.seismic_activity}<br>
+                Soil Type: ${sensor.soil_type}<br>
+                Risk Level: ${sensor.risk_level}<br>
+                Predicted Landslide Time: ${sensor.predicted_landslide_time}
+        `).openPopup();
+        }
+    });
+}
+
+// Optimized function to find safe zones in all directions
+async function findSafeZones(userLat, userLng, unsafeAreas) {
+    const searchRadius = 0.5; // Start with 500m search radius
+    const maxSearchRadius = 2; // Maximum 2km search radius
+    const points = 16; // More points to check in all directions
+    let safeZones = [];
+
+    // Pre-calculate unsafe area radii for faster comparison
+    const unsafeRadii = unsafeAreas.map(area => ({
+        lat: area.latitude,
+        lng: area.longitude,
+        radius: (area.affected_radius / 1000) * 1.5 // 1.5x safety buffer
+    }));
+
+    // Search in concentric circles with smaller increments for better coverage
+    for (let radius = searchRadius; radius <= maxSearchRadius; radius += 0.2) {
+        for (let i = 0; i < points; i++) {
+            const angle = (i * 2 * Math.PI) / points;
+            const lat = userLat + (radius * Math.cos(angle));
+            const lng = userLng + (radius * Math.sin(angle));
+
+            // Check if point is safe using optimized distance calculation
+            const isSafe = !unsafeRadii.some(area => {
+                const dx = lat - area.lat;
+                const dy = lng - area.lng;
+                return (dx * dx + dy * dy) < (area.radius * area.radius);
+            });
+
+            if (isSafe) {
+                safeZones.push({ 
+                    lat, 
+                    lng, 
+                    distance: radius,
+                    direction: getDirection(angle)
+                });
+            }
+        }
+    }
+
+    // Group safe zones by direction and find the best in each direction
+    return groupSafeZonesByDirection(safeZones);
+}
+
+// Helper function to get cardinal direction from angle
+function getDirection(angle) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round(angle / (Math.PI / 4)) % 8;
+    return directions[index];
+}
+
+// Helper function to group safe zones by direction and find the best in each
+function groupSafeZonesByDirection(safeZones) {
+    const grouped = {};
+    safeZones.forEach(zone => {
+        if (!grouped[zone.direction] || zone.distance < grouped[zone.direction].distance) {
+            grouped[zone.direction] = zone;
+        }
+    });
+    return Object.values(grouped);
+}
+
+// Optimized function to fetch safe zone name
+async function fetchSafeZoneName(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const data = await response.json();
+        return data.display_name || 'Safe Zone';
+    } catch (error) {
+        console.error('Error fetching safe zone name:', error);
+        return 'Safe Zone';
+    }
+}
+
+// Optimized function to simulate traffic and evacuation routes
+async function simulateTrafficAndEvacuationRoutes(sensors, userLat, userLng) {
+    if (!map) return;
+
+    // Define unsafe areas
+    const unsafeAreas = sensors.filter(sensor => 
+        sensor.status === 'Alert' || sensor.status === 'Warning'
+    );
+
+    // Check if user is near hazards
+    if (!isUserNearHazard(userLat, userLng, unsafeAreas)) {
+        routeInfo.innerHTML = `You are safe! No evacuation required.`;
+        return;
+    }
+
+    // Draw unsafe areas with optimized rendering
+    unsafeAreas.forEach(area => {
+        if (area.latitude && area.longitude) {
+            L.circle([area.latitude, area.longitude], {
+                color: area.status === 'Alert' ? 'red' : 'orange',
+                fillColor: area.status === 'Alert' ? '#f03' : '#ffcc00',
                 fillOpacity: 0.5,
-                radius: location.affectedRadius
+                radius: area.affected_radius
             }).addTo(map);
         }
     });
 
-    // Update Sensor Details Table
-    const sensorTableBody = document.getElementById('sensor-table-body');
-    pinnedLocations.forEach(location => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${location.label.split(":")[0].trim()}</td>
-            <td><span style="color: ${location.status === 'Alert' ? 'red' : location.status === 'Warning' ? 'orange' : 'green'};">${location.status}</span></td>
-            <td>${location.rainfall}</td>
-            <td>${location.forecasted_rainfall}</td>
-            <td>${location.soil_saturation}</td>
-            <td>${location.slope}</td>
-            <td>${location.seismic_activity}</td>
-            <td>${location.soil_type}</td>
-            <td>${location.risk}</td>
-            <td>${location.predicted_landslide_time || "No prediction available"}</td>
-        `;
-        sensorTableBody.appendChild(row);
-    });
+    // Find safe zones in all directions
+    const safeZones = await findSafeZones(userLat, userLng, unsafeAreas);
 
-    // Alert System
-    const alertMessage = document.getElementById('alert-message');
-    const alertSound = document.getElementById('alert-sound');
-    const alertBox = document.getElementById('alert-box');
-
-    function triggerAlert(location, distance) {
-        // Create alert item
-        const alertItem = document.createElement('div');
-        alertItem.className = 'alert-item';
-        alertItem.innerHTML = `
-            <p><strong>${location.label}</strong></p>
-            <p>Status: ${location.status}</p>
-            <p>Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}</p>
-            <p>Distance: ${distance.toFixed(2)} km away</p>
-            <button class="share-alert-btn">Share Alert</button> <!-- Add Share Alert Button -->
-        `;
-        alertBox.appendChild(alertItem);
-    
-        // Play alert sound
-        alertSound.play();
-    
-        // Redirect map view to the danger area
-        map.setView([location.lat, location.lng], 12); // Zoom level 12 for closer view
-    
-        // Open the sensor's popup
-        const marker = L.marker([location.lat, location.lng]).addTo(map);
-        marker.bindPopup(`
-            ${location.label}<br>
-            Status: ${location.status}<br>
-            Rainfall: ${location.rainfall} mm<br>
-            Soil Saturation: ${location.soil_saturation}%<br>
-            Slope: ${location.slope}°<br>
-            Seismic Activity: ${location.seismic_activity}<br>
-            Soil Type: ${location.soil_type}<br>
-            Risk Level: ${location.risk}<br>
-            Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}
-        `).openPopup();
-    
-        // Add event listener to the "Share Alert" button
-        const shareAlertBtn = alertItem.querySelector('.share-alert-btn');
-        shareAlertBtn.addEventListener('click', () => {
-            const message = `🚨 LANDSLIDE DETECTED 
-                Location: ${location.label}
-                Status: ${location.status}
-                Predicted Landslide Time: ${location.predicted_landslide_time || "No prediction available"}
-                More info: https://final-corrected.vercel.app/
-            `.trim();
-            showPopup(message); // Show the pop-up modal with the alert details
-        });
-    }
-   // Function to display the pop-up modal
-function showPopup(message) {
-    const popupMessage = document.getElementById('popup-message');
-    const popupModal = document.getElementById('popup-modal');
-
- // Set the alert message in the pop-up (using innerHTML to render the link)
-    popupMessage.innerHTML = message;
-
-    // Set the alert message in the pop-up
-    popupMessage.textContent = message;
-
-    // Show the pop-up modal
-    popupModal.style.display = 'flex';
-
-    // Get references to the buttons in the pop-up modal
-    const confirmShare = document.getElementById('confirm-share');
-    const cancelShare = document.getElementById('cancel-share');
-
-    // Handle "Share on WhatsApp" button click
-    confirmShare.onclick = () => {
-        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank'); // Redirect to WhatsApp
-        popupModal.style.display = 'none'; // Hide the pop-up after sharing
-    };
-
-    // Handle "Cancel" button click
-    cancelShare.onclick = () => {
-        popupModal.style.display = 'none'; // Hide the pop-up
-    };
-}
-
-    // Simulate alerts after 5 seconds
-    setTimeout(() => {
-        const alertLocations = pinnedLocations.filter(location => location.status === 'Alert' || location.status === 'Warning');
-
-        // Calculate distances and find the nearest danger
-        let nearestDanger = null;
-        let minDistance = Infinity;
-        alertLocations.forEach(location => {
-            const distance = calculateDistance(userLat, userLng, location.lat, location.lng);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestDanger = location;
-            }
-            triggerAlert(location, distance);
-        });
-
-        // Redirect to the nearest danger
-        if (nearestDanger) {
-            map.setView([nearestDanger.lat, nearestDanger.lng], 12);
-        }
-    }, 5000);
-// Function to check if the user is near or inside a hazardous area
-function isUserNearHazard(userLat, userLng, hazardousAreas, bufferRadius = 10) {
-    for (const area of hazardousAreas) {
-        const distanceToArea = calculateDistance(userLat, userLng, area.lat, area.lng);
-        const safetyBuffer = Math.max(bufferRadius, area.affectedRadius / 1000); // Buffer radius in km
-        if (distanceToArea <= safetyBuffer) {
-            return true; // User is near or inside a hazardous area
-        }
-    }
-    return false; // User is not near any hazardous areas
-}
-
-async function simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, userLng) {
-    // Define unsafe areas
-    const unsafeAreas = pinnedLocations.filter(location => location.status === 'Alert' || location.status === 'Warning');
-
-    // Check if the user is near or inside any hazardous areas
-    if (!isUserNearHazard(userLat, userLng, unsafeAreas)) {
-        console.log("User is not near any hazardous areas. Safe zone search skipped.");
-        const routeInfo = document.getElementById('route-info');
-        routeInfo.innerHTML = `You are safe! No evacuation required.`;
-        return; // Exit the function early
+    if (safeZones.length === 0) {
+        routeInfo.innerHTML = `No safe zones found within 2km. Please contact emergency services.`;
+        return;
     }
 
-    // Draw unsafe areas on the map
-    unsafeAreas.forEach(area => {
-        L.circle([area.lat, area.lng], {
-            color: area.status === 'Alert' ? 'red' : 'orange',
-            fillColor: area.status === 'Alert' ? '#f03' : '#ffcc00',
-            fillOpacity: 0.5,
-            radius: area.affectedRadius
-        }).addTo(map);
-    });
+    // Sort safe zones by distance
+    safeZones.sort((a, b) => a.distance - b.distance);
 
-    // Dynamically identify safe zones while avoiding hazardous areas
-    let nearestSafeZone = null;
-    let minSafeDistance = Infinity;
-    let searchRadius = 5; // Start with a 5 km search radius
-    const maxSearchRadius = 50; // Maximum search radius (50 km)
-
-    while (!nearestSafeZone && searchRadius <= maxSearchRadius) {
-        for (let i = 0; i < 360; i += 45) { // Check 8 directions around the user
-            const angle = (i * Math.PI) / 180;
-            const safeLat = userLat + (searchRadius / 111) * Math.cos(angle);
-            const safeLng = userLng + (searchRadius / (111 * Math.cos(userLat * (Math.PI / 180)))) * Math.sin(angle);
-
-            // Check if this point is outside all unsafe areas with dynamic safety buffer
-            let isSafe = true;
-
-            // Exclude points within unsafe areas
-            for (const area of unsafeAreas) {
-                const distanceToArea = calculateDistance(safeLat, safeLng, area.lat, area.lng);
-                const safetyBuffer = Math.max(10, area.affectedRadius / 1000); // Dynamic buffer: at least 10 km or the impact radius
-                if (distanceToArea <= safetyBuffer) { // Exclude points within the safety buffer
-                    isSafe = false;
-                    break;
-                }
-            }
-
-            // Exclude points near hazardous features (e.g., water bodies, cliffs, quarries)
-            if (isSafe) {
-                const hazardousFeatures = await fetchHazardousFeatures(safeLat, safeLng, 2); // 2 km radius for hazard exclusion
-                for (const hazard of hazardousFeatures) {
-                    const distanceToHazard = calculateDistance(safeLat, safeLng, hazard.lat, hazard.lng);
-                    if (distanceToHazard <= 1) { // Exclude points within 1 km of hazardous features
-                        isSafe = false;
-                        break;
-                    }
-                }
-            }
-
-            // Exclude points near seas or large water bodies
-            if (isSafe) {
-                const waterBodies = await fetchHazardousFeatures(safeLat, safeLng, 5); // 5 km radius for water body exclusion
-                for (const waterBody of waterBodies) {
-                    const distanceToWater = calculateDistance(safeLat, safeLng, waterBody.lat, waterBody.lng);
-                    if (distanceToWater <= 5) { // Exclude points within 5 km of water bodies
-                        isSafe = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isSafe) {
-                const distanceToUser = calculateDistance(userLat, userLng, safeLat, safeLng);
-                if (distanceToUser < minSafeDistance) {
-                    minSafeDistance = distanceToUser;
-                    nearestSafeZone = { lat: safeLat, lng: safeLng };
-                }
-            }
-        }
-
-        // Expand search radius if no safe zone is found
-        searchRadius += 5;
-    }
-
-    if (nearestSafeZone) {
-        // Use Nominatim API to get the name of the safe zone area
-        const safeZoneName = await fetchSafeZoneName(nearestSafeZone.lat, nearestSafeZone.lng);
-
-        // Use OSRM API to calculate the shortest route along roads
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${nearestSafeZone.lng},${nearestSafeZone.lat}?geometries=geojson&steps=true`;
-        try {
-            const response = await fetch(osrmUrl);
-            const data = await response.json();
-            if (data && data.routes && data.routes.length > 0) {
-                const routeCoordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
-                const polyline = L.polyline(routeCoordinates, { color: 'green' }).addTo(map);
-
-                // Fit the map to show the entire route
-                //map.fitBounds(polyline.getBounds());
-
-                // Add a circular safe zone at the endpoint
-                L.circle([nearestSafeZone.lat, nearestSafeZone.lng], {
-                    color: 'green',
-                    fillColor: '#32CD32',
-                    fillOpacity: 0.5,
-                    radius: 1000 // 1 km radius for the safe zone
-                }).addTo(map);
-
-                // Add a marker for the safe zone
-                L.marker([nearestSafeZone.lat, nearestSafeZone.lng], {
-                    icon: L.divIcon({
-                        className: 'safe-sign',
-                    })
-                }).addTo(map);
-
-                // Display evacuation instructions with the safe zone name
-                const routeInfo = document.getElementById('route-info');
-                routeInfo.innerHTML = `
-                    Evacuate to: ${safeZoneName || "Unknown Area"}<br>
-                    Distance: ${minSafeDistance.toFixed(0)} km<br>
-                    Route: Follow the green line on the map.<br>
-                    🚨Assist Others and Stay Safe 🚨<br>
-                    Take Essentials Only<br>
-                    Follow Instructions from Authorities<br>
-                `;
-            } else {
-                const routeInfo = document.getElementById('route-info');
-                routeInfo.innerHTML = `No safe route found. Please stay cautious!`;
-            }
-        } catch (error) {
-            console.error("Error fetching route data from OSRM:", error);
-            const routeInfo = document.getElementById('route-info');
-            routeInfo.innerHTML = `Failed to calculate evacuation route. Please try again later.`;
-        }
-    } else {
-        const routeInfo = document.getElementById('route-info');
-        routeInfo.innerHTML = `No safe zones found within ${maxSearchRadius} km. Please stay cautious!`;
-    }
-}
-
-// Fetch the name of the safe zone area using Nominatim API
-async function fetchSafeZoneName(lat, lng) {
-    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+    // Get the best safe zone (closest)
+    const bestSafeZone = safeZones[0];
+    const safeZoneName = await fetchSafeZoneName(bestSafeZone.lat, bestSafeZone.lng);
+    const waypoints = [
+        `${userLng},${userLat}`,
+        `${bestSafeZone.lng},${bestSafeZone.lat}`
+    ];
 
     try {
-        const response = await fetch(nominatimUrl, {
-            headers: {
-                'User-Agent': 'Landslide-Evacuation-System' // Required by Nominatim usage policy
-            }
-        });
+        const response = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${waypoints.join(';')}?geometries=geojson&steps=true`
+        );
+        
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
         const data = await response.json();
+        if (data?.routes?.[0]) {
+            const route = data.routes[0];
+            const routeCoordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+            
+            // Draw route with green color
+            L.polyline(routeCoordinates, { 
+                color: '#00FF00',
+                weight: 3,
+                opacity: 0.8
+            }).addTo(map);
 
-        if (data && data.address) {
-            // Prioritize town, village, or city name
-            return data.address.town || data.address.village || data.address.city || data.display_name.split(',')[0];
+            // Add safe zone marker
+            L.circle([bestSafeZone.lat, bestSafeZone.lng], {
+                color: 'green',
+                fillColor: '#32CD32',
+                fillOpacity: 0.5,
+                radius: 150
+            }).addTo(map);
+
+            L.marker([bestSafeZone.lat, bestSafeZone.lng], {
+                icon: L.divIcon({
+                    className: 'safe-sign',
+                    html: '🟢',
+                    iconSize: [30, 30]
+                })
+            }).addTo(map);
+
+            // Update route info with best route details
+            routeInfo.innerHTML = `
+                <h3>🚨 Best Evacuation Route 🚨</h3>
+                <p><strong>Safe Zone:</strong> ${safeZoneName}</p>
+                <p><strong>Direction:</strong> ${bestSafeZone.direction}</p>
+                <p><strong>Distance:</strong> ${(route.distance / 1000).toFixed(1)} km</p>
+                <p><strong>Estimated Time:</strong> ${Math.ceil(route.duration / 60)} minutes</p>
+                <p><strong>Emergency Contacts:</strong></p>
+                <ul>
+                    <li>Emergency Services: 112</li>
+                    <li>Police: 100</li>
+                    <li>Fire: 101</li>
+                </ul>
+                <p><strong>Important Notes:</strong></p>
+                <ul>
+                    <li>Follow the green route on the map</li>
+                    <li>This is the shortest safe route</li>
+                    <li>Take essential items only</li>
+                    <li>Stay calm and follow instructions</li>
+                    <li>Help others if possible</li>
+                </ul>
+            `;
         }
-        return null;
     } catch (error) {
-        console.error("Error fetching safe zone name from Nominatim:", error);
-        return null;
+        console.error('Error calculating route:', error);
+        routeInfo.innerHTML = `
+            <h3>🚨 Emergency Alert 🚨</h3>
+            <p>Error calculating evacuation route. Please:</p>
+            <ul>
+                <li>Contact emergency services (112)</li>
+                <li>Move to higher ground</li>
+                <li>Stay away from water bodies</li>
+                <li>Follow local authorities' instructions</li>
+            </ul>
+        `;
     }
 }
-    // Simulate traffic and evacuation routes after 10 seconds
-    setTimeout(() => {
-        simulateTrafficAndEvacuationRoutes(pinnedLocations, userLat, userLng);
-    }, 10000);
 
-    // Feedback Form Submission
-    const feedbackForm = document.getElementById('feedback-form');
-    feedbackForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const feedback = document.getElementById('feedback').value;
-        alert('Thank you for your feedback!');
-        feedbackForm.reset();
+// Helper function to get color based on direction
+function getDirectionColor(direction) {
+    const colors = {
+        'N': '#FF0000',  // Red
+        'NE': '#FF7F00', // Orange
+        'E': '#FFFF00',  // Yellow
+        'SE': '#00FF00', // Green
+        'S': '#0000FF',  // Blue
+        'SW': '#4B0082', // Indigo
+        'W': '#8B00FF',  // Violet
+        'NW': '#FF00FF'  // Magenta
+    };
+    return colors[direction] || '#00FF00';
+}
+
+// Optimized function to check if user is near hazardous areas
+function isUserNearHazard(userLat, userLng, hazardousAreas, bufferRadius = 5) {
+    return hazardousAreas.some(area => {
+        const dx = userLat - area.latitude;
+        const dy = userLng - area.longitude;
+        const safetyBuffer = Math.max(bufferRadius, area.affected_radius / 1000);
+        return (dx * dx + dy * dy) <= (safetyBuffer * safetyBuffer);
     });
 }
 
-// Show geolocation errors
-function showError(error) {
-    switch (error.code) {
-        case error.PERMISSION_DENIED:
-            alert("User denied the request for geolocation.");
-            break;
-        case error.POSITION_UNAVAILABLE:
-            alert("Location information is unavailable.");
-            break;
-        case error.TIMEOUT:
-            alert("The request to get user location timed out.");
-            break;
-        case error.UNKNOWN_ERROR:
-            alert("An unknown error occurred.");
-            break;
-    }
+// Initialize map when geolocation is available
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(initMap, showError);
+} else {
+    showError("Geolocation is not supported by this browser.");
 }
 
-// Automatically initialize map on page load
-document.addEventListener("DOMContentLoaded", () => {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(initMap, showError);
-    } else {
-        alert("Geolocation is not supported by this browser.");
+// Optimized error handling
+function showError(error) {
+    console.error("Error:", error);
+    mapElement.innerHTML = `<div class="error-message">Error: ${error}</div>`;
+}
+
+// Optimized share alert functionality
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('share-alert-btn')) {
+        const alertText = e.target.closest('.alert-item').querySelector('p').textContent;
+        window.open(`https://wa.me/?text=${encodeURIComponent(alertText)}`, '_blank');
     }
 });
+
+// Set up periodic data refresh with optimized interval
+setInterval(async () => {
+    const newSensors = await fetchSensorData();
+    if (newSensors !== lastSensorData) {
+        initializeSensorData(map.getCenter().lat, map.getCenter().lng);
+    }
+}, 60000);
 
 
